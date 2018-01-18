@@ -1,4 +1,4 @@
-package com.owsega.citydirectory;
+package com.owsega.citydirectory.view;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -8,7 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.owsega.citydirectory.dummy.DummyContent;
+import com.owsega.citydirectory.R;
+import com.owsega.citydirectory.model.DummyContent;
 
 /**
  * A fragment representing a single City detail screen.

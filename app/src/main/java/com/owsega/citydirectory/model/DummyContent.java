@@ -1,11 +1,19 @@
-package com.owsega.citydirectory.dummy;
+package com.owsega.citydirectory.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
+/*
+setup dummy ui
+implement core logic for search
+import json to assets
+read json to memory at startup
+parse json into a trie
+test trie search
+implement ui
+
  * Helper class for providing sample content for user interfaces created by
  * Android template wizards.
  * <p>
