@@ -26,17 +26,18 @@ import java.util.concurrent.Executors;
 public class CityListViewModel extends ViewModel {
 
     //    private static final String CITIES_FILE = "cities.json";
-    public static final String CITIES_FILE = "smallcities.json";
+    private static final String CITIES_FILE = "smallcities.json";
+    private static final String TAG = "CityListViewModel";
 
     public LiveData<PagedList<City>> cityList;
-    private LiveData<CityDataSource> cityDataSource;
+    private CityDataSourceFactory dataSourceFactory;
     private Executor executor;
 
     public CityListViewModel() {
     }
 
     public void init(Context context) {
-        if (cityDataSource != null && executor != null && cityList != null) return;
+        if (executor != null && cityList != null) return;
 
         List<City> cities;
         try {
@@ -47,7 +48,7 @@ public class CityListViewModel extends ViewModel {
             e.printStackTrace();
             return;
         }
-        CityDataSourceFactory cityDataSourceFactory = new CityDataSourceFactory(cities);
+        dataSourceFactory = new CityDataSourceFactory(cities);
 //        cityDataSource = cityDataSourceFactory.getMutableLiveData();
 
         PagedList.Config pagedListConfig =
@@ -58,7 +59,7 @@ public class CityListViewModel extends ViewModel {
                         .build();
 
         executor = Executors.newFixedThreadPool(5);
-        cityList = new LivePagedListBuilder(cityDataSourceFactory, pagedListConfig)
+        cityList = new LivePagedListBuilder(dataSourceFactory, pagedListConfig)
                 .setBackgroundThreadExecutor(executor)
                 .build();
     }
@@ -71,12 +72,12 @@ public class CityListViewModel extends ViewModel {
         }.getType();
         List<City> cities = new Gson().fromJson(reader, type);
         long diff = System.currentTimeMillis() - begin;
-        Log.e("seyi", "time to parse json " + diff);
+        Log.e(TAG, "time to parse json " + diff);
         reader.close();
         return cities;
     }
 
     public void filterCities(String filterText) {
-        CityListViewModel viewModel;
+        dataSourceFactory.filterList(filterText);
     }
 }

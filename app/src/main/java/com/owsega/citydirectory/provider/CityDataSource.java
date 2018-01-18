@@ -2,12 +2,15 @@ package com.owsega.citydirectory.provider;
 
 import android.arch.paging.ItemKeyedDataSource;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.owsega.citydirectory.model.City;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 public class CityDataSource extends ItemKeyedDataSource<String, City> {
@@ -21,6 +24,11 @@ public class CityDataSource extends ItemKeyedDataSource<String, City> {
         for (City city : data) {
             cityMap.put(city.toString(), city);
         }
+    }
+
+    public CityDataSource(SortedMap<String, City> data) {
+        this.count = data.size();
+        this.cityMap = new ConcurrentSkipListMap<>(data);
     }
 
     @Override
@@ -73,6 +81,14 @@ public class CityDataSource extends ItemKeyedDataSource<String, City> {
     public String getKey(@NonNull City item) {
         // warning: this assumes the key for any city is its toString equivalent
         return item.toString();
+    }
+
+    public ConcurrentNavigableMap<String, City> filterWith(String text) {
+        Log.e("seyi", "filtering with " + text);
+        String lowerBound = cityMap.floorKey(text);
+        int len = text.length() - 1;
+        String higherBound = text.substring(0, len) + (char) (text.charAt(len) + 1);
+        return cityMap.subMap(lowerBound, higherBound);
     }
 }
     
