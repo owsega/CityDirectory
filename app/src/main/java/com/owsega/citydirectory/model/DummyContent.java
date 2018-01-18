@@ -6,14 +6,13 @@ import java.util.List;
 import java.util.Map;
 
 /*
-setup dummy ui
-implement core logic for search
-import json to assets
-read json to memory at startup
+ * setup list UI
+ * import json to assets
+ * read json to memory at startup
+ implement core logic for search
 parse json into a trie
 test trie search
-implement ui
-
+implement map UI
  * Helper class for providing sample content for user interfaces created by
  * Android template wizards.
  * <p>
