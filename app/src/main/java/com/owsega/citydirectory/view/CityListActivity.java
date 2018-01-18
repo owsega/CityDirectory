@@ -8,12 +8,8 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ViewSwitcher;
 
-import com.owsega.citydirectory.LoadDataTask;
 import com.owsega.citydirectory.R;
-import com.owsega.citydirectory.adapter.CityAdapter;
-import com.owsega.citydirectory.model.DummyContent;
-
-import java.io.IOException;
+import com.owsega.citydirectory.provider.CityAdapter;
 
 /**
  * An activity representing a list of Cities. This activity
@@ -49,21 +45,11 @@ public class CityListActivity extends AppCompatActivity {
         View recyclerView = findViewById(R.id.city_list);
         assert recyclerView != null;
         setupRecyclerView((RecyclerView) recyclerView);
-
-        initializeData();
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
         boolean mTwoPane = viewSwitcher == null;
-        recyclerView.setAdapter(new CityAdapter(this, DummyContent.ITEMS, mTwoPane));
-    }
-
-    private void initializeData() {
-        try {
-            new LoadDataTask(getAssets().open("cities.json")).execute();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        recyclerView.setAdapter(new CityAdapter(this, mTwoPane));
     }
 
     @Override

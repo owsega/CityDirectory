@@ -1,16 +1,17 @@
-package com.owsega.citydirectory;
+package com.owsega.citydirectory.provider;
 
 import android.os.AsyncTask;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.owsega.citydirectory.model.City;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.lang.reflect.Type;
 import java.util.List;
 
 /**
@@ -18,6 +19,7 @@ import java.util.List;
  */
 public class LoadDataTask extends AsyncTask<Void, Void, Void> {
 
+    private List<City> cities;
     private InputStream in;
 
     public LoadDataTask(InputStream inputStream) {
@@ -27,7 +29,8 @@ public class LoadDataTask extends AsyncTask<Void, Void, Void> {
     @Override
     protected Void doInBackground(Void... voids) {
         try {
-            readJsonStream(in);
+            readJsonWhole(in);
+//            readJsonStream(in);
         } catch (IOException e) {
 
         }
@@ -35,15 +38,34 @@ public class LoadDataTask extends AsyncTask<Void, Void, Void> {
         return null;
     }
 
+    /**
+     *  total time: 116471   (1.94118333 minutes)
+     */
+    private List<City> readJsonWhole(InputStream in) throws IOException {
+        JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
+        long begin = System.currentTimeMillis();
+        Type type = new TypeToken<List<City>>() {}.getType();
+        cities = new Gson().fromJson(reader, type);
+        long diff = System.currentTimeMillis() - begin;
+        Log.e("seyi", "total time " + diff);
+        reader.close();
+        return cities;
+    }
+
+    /**
+     * cities size: 209557, total time 1005445  (16.75741667 minutes)
+     */
     public List<City> readJsonStream(InputStream in) throws IOException {
         JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
-        List<City> cities = new ArrayList<>();
         reader.beginArray();
+        long begin = System.currentTimeMillis();
         while (reader.hasNext()) {
             City city = new Gson().fromJson(reader, City.class);
             cities.add(city);
-            Log.e("seyi", "adding " + city);
+            Log.e("seyi", "cities size: " + cities.size());
         }
+        long diff = System.currentTimeMillis() - begin;
+        Log.e("seyi", "total time " + diff);
         reader.endArray();
         reader.close();
         return cities;

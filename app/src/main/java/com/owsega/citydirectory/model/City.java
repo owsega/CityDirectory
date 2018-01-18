@@ -18,7 +18,6 @@ public class City implements Comparable<City> {
 
     @Override
     public String toString() {
-//        return String.format(Locale.ENGLISH, "%s, %s (%f,%f)", name, country, coord.lon, coord.lat);
         return name + ", " + country;
     }
 

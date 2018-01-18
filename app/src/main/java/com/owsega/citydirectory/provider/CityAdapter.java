@@ -1,4 +1,4 @@
-package com.owsega.citydirectory.adapter;
+package com.owsega.citydirectory.provider;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -8,11 +8,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
 import com.owsega.citydirectory.R;
 import com.owsega.citydirectory.model.City;
 import com.owsega.citydirectory.view.CityDetailFragment;
 import com.owsega.citydirectory.view.CityListActivity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -20,6 +22,7 @@ import java.util.List;
  */
 public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
 
+    private Gson gson = new Gson();
     private final CityListActivity mParentActivity;
     private final List<City> mValues;
     private final boolean mTwoPane;
@@ -28,7 +31,7 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
         public void onClick(View view) {
             City item = (City) view.getTag();
             Bundle arguments = new Bundle();
-            arguments.putString(CityDetailFragment.ARG_ITEM_ID, item.name);
+            arguments.putString(CityDetailFragment.ARG_ITEM, gson.toJson(item));
             CityDetailFragment fragment = new CityDetailFragment();
             fragment.setArguments(arguments);
             mParentActivity.getSupportFragmentManager().beginTransaction()
@@ -45,8 +48,8 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
         }
     };
 
-    public CityAdapter(CityListActivity parent, List<City> items, boolean twoPane) {
-        mValues = items;
+    public CityAdapter(CityListActivity parent, boolean twoPane) {
+        mValues = new ArrayList<>();
         mParentActivity = parent;
         mTwoPane = twoPane;
     }
