@@ -18,7 +18,6 @@ public class CityDataSourceFactory implements DataSource.Factory {
         this.mutableLiveData = new MutableLiveData<>();
     }
 
-
     @Override
     public DataSource create() {
         cityDataSource = new CityDataSource(data);

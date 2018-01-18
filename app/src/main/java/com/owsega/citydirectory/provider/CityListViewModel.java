@@ -29,8 +29,8 @@ public class CityListViewModel extends ViewModel {
     public static final String CITIES_FILE = "smallcities.json";
 
     public LiveData<PagedList<City>> cityList;
-    LiveData<CityDataSource> cityDataSource;
-    Executor executor;
+    private LiveData<CityDataSource> cityDataSource;
+    private Executor executor;
 
     public CityListViewModel() {
     }
@@ -48,15 +48,17 @@ public class CityListViewModel extends ViewModel {
             return;
         }
         CityDataSourceFactory cityDataSourceFactory = new CityDataSourceFactory(cities);
-        cityDataSource = cityDataSourceFactory.getMutableLiveData();
+//        cityDataSource = cityDataSourceFactory.getMutableLiveData();
 
         PagedList.Config pagedListConfig =
-                (new PagedList.Config.Builder()).setEnablePlaceholders(false)
+                new PagedList.Config.Builder()
+                        .setEnablePlaceholders(false)
                         .setInitialLoadSizeHint(10)
-                        .setPageSize(20).build();
+                        .setPageSize(20)
+                        .build();
 
         executor = Executors.newFixedThreadPool(5);
-        cityList = (new LivePagedListBuilder(cityDataSourceFactory, pagedListConfig))
+        cityList = new LivePagedListBuilder(cityDataSourceFactory, pagedListConfig)
                 .setBackgroundThreadExecutor(executor)
                 .build();
     }
@@ -72,5 +74,9 @@ public class CityListViewModel extends ViewModel {
         Log.e("seyi", "time to parse json " + diff);
         reader.close();
         return cities;
+    }
+
+    public void filterCities(String filterText) {
+        CityListViewModel viewModel;
     }
 }

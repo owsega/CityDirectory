@@ -8,13 +8,27 @@
     android:layout_height="match_parent"
     tools:context="com.owsega.citydirectory.view.CityListActivity">
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/city_list"
-        android:name="com.owsega.citydirectory.CityListFragment"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layoutManager="LinearLayoutManager"
-        tools:listitem="@layout/city_list_content"/>
+        android:orientation="vertical">
+
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/search_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:hint="@string/search"/>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/city_list"
+            android:name="com.owsega.citydirectory.CityListFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layoutManager="LinearLayoutManager"
+            tools:listitem="@layout/city_list_content"/>
+    </LinearLayout>
 
     <FrameLayout
         android:id="@+id/city_detail_container"

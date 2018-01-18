@@ -31,9 +31,8 @@ public class City implements Comparable<City> {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        return this.toString().equalsIgnoreCase(obj.toString());
+    public boolean equals(Object o) {
+        return o == this || o instanceof City && this.toString().equalsIgnoreCase(o.toString());
     }
 
     @Override

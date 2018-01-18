@@ -7,7 +7,10 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ViewSwitcher;
 
 import com.owsega.citydirectory.R;
@@ -25,6 +28,7 @@ import com.owsega.citydirectory.provider.CityPagedAdapter;
  */
 public class CityListActivity extends AppCompatActivity implements OnCityClickListener, CityPagedAdapter.OnCityClickListener {
 
+    CityListViewModel viewModel;
     /**
      * When the activity is not in single-pane mode, this view will not be null
      */
@@ -49,15 +53,40 @@ public class CityListActivity extends AppCompatActivity implements OnCityClickLi
         View recyclerView = findViewById(R.id.city_list);
         assert recyclerView != null;
         setupRecyclerView((RecyclerView) recyclerView);
+
+        EditText editText = findViewById(R.id.search_view);
+        assert editText != null;
+        setupSearchView(editText);
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
         // recyclerView.setAdapter(new CityAdapter(this, this));
         final CityPagedAdapter cityAdapter = new CityPagedAdapter(this);
-        CityListViewModel viewModel = ViewModelProviders.of(this).get(CityListViewModel.class);
+        viewModel = ViewModelProviders.of(this).get(CityListViewModel.class);
         viewModel.init(this);
         viewModel.cityList.observe(this, cityAdapter::setList);
         recyclerView.setAdapter(cityAdapter);
+    }
+
+    private void setupSearchView(EditText editText) {
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                filterList(s.toString());
+            }
+        });
+    }
+
+    private void filterList(String text) {
+        viewModel.filterCities(text);
     }
 
     @Override

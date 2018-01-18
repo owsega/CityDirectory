@@ -2,4 +2,5 @@
     <string name="app_name">City Directory</string>
     <string name="title_city_detail">City Detail</string>
     <string name="error_loading_cities">Error while loading cities data</string>
+    <string name="search">Search</string>
 </resources>
