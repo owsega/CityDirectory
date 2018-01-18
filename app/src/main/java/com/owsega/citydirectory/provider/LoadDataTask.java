@@ -6,6 +6,7 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import com.owsega.citydirectory.model.CitiesTrie;
 import com.owsega.citydirectory.model.City;
 
 import java.io.IOException;
@@ -36,11 +37,22 @@ public class LoadDataTask extends AsyncTask<Void, Void, Void> {
         }.getType();
         List<City> cities = new Gson().fromJson(reader, type);
         long diff = System.currentTimeMillis() - begin;
-        Log.e("seyi", "total time " + diff);
+        Log.e("seyi", "time to parse json " + diff);
         reader.close();
         return cities;
     }
 
+    public static CitiesTrie passIntoTrie(List<City> cities) {
+        CitiesTrie trie = new CitiesTrie();
+
+        long begin = System.currentTimeMillis();
+        for (City city : cities) {
+            trie.add(city);
+        }
+        long diff = System.currentTimeMillis() - begin;
+        Log.e("seyi", "time to build trie " + diff);
+        return trie;
+    }
 
     @Override
     protected Void doInBackground(Void... voids) {
