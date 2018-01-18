@@ -21,8 +21,6 @@
         android:name="com.owsega.citydirectory.CityListFragment"
         android:layout_width="@dimen/item_width"
         android:layout_height="match_parent"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
         app:layoutManager="LinearLayoutManager"
         tools:context="com.owsega.citydirectory.view.CityListActivity"
         tools:listitem="@layout/city_list_content"/>

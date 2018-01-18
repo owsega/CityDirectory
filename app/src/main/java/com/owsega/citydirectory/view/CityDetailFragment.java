@@ -19,7 +19,7 @@ public class CityDetailFragment extends Fragment {
     /**
      * The fragment argument representing the city that this fragment shows.
      */
-    public static final String ARG_ITEM = "item";
+    public static final String ARG_CITY = "city";
 
     /**
      * The content this fragment is presenting.
@@ -34,11 +34,11 @@ public class CityDetailFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         Bundle args = getArguments();
-        if (args != null && args.containsKey(ARG_ITEM)) {
+        if (args != null && args.containsKey(ARG_CITY)) {
             // Load the content specified by the fragment
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
-            city = new Gson().fromJson(getArguments().getString(ARG_ITEM), City.class);
+            city = new Gson().fromJson(getArguments().getString(ARG_CITY), City.class);
         }
     }
 

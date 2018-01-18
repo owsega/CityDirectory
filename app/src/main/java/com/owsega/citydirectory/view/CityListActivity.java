@@ -2,6 +2,7 @@ package com.owsega.citydirectory.view;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -10,6 +11,7 @@ import android.widget.ViewSwitcher;
 
 import com.owsega.citydirectory.R;
 import com.owsega.citydirectory.provider.CityAdapter;
+import com.owsega.citydirectory.provider.CityAdapter.OnCityClickListener;
 
 /**
  * An activity representing a list of Cities. This activity
@@ -19,7 +21,7 @@ import com.owsega.citydirectory.provider.CityAdapter;
  * On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class CityListActivity extends AppCompatActivity {
+public class CityListActivity extends AppCompatActivity implements OnCityClickListener {
 
     /**
      * When the activity is not in single-pane mode, this view will not be null
@@ -48,8 +50,7 @@ public class CityListActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
-        boolean mTwoPane = viewSwitcher == null;
-        recyclerView.setAdapter(new CityAdapter(this, mTwoPane));
+        recyclerView.setAdapter(new CityAdapter(this, this));
     }
 
     @Override
@@ -67,5 +68,24 @@ public class CityListActivity extends AppCompatActivity {
      */
     public void showDetail(boolean shouldShow) {
         viewSwitcher.setDisplayedChild(shouldShow ? 1 : 0);
+    }
+
+    @Override
+    public void onCityClicked(String city) {
+        Bundle arguments = new Bundle();
+        arguments.putString(CityDetailFragment.ARG_CITY, city);
+        CityDetailFragment fragment = new CityDetailFragment();
+        fragment.setArguments(arguments);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.city_detail_container, fragment)
+                .commit();
+
+        if (viewSwitcher != null) {
+            showDetail(true);
+        }
+    }
+
+    public void showError(CharSequence message) {
+        Snackbar.make(viewSwitcher, message, Snackbar.LENGTH_LONG);
     }
 }

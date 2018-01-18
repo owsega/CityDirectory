@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">CityDirectory</string>
     <string name="title_city_detail">City Detail</string>
+    <string name="error_loading_cities">Error while loading cities data</string>
 </resources>

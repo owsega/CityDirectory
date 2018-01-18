@@ -26,25 +26,40 @@ public class LoadDataTask extends AsyncTask<Void, Void, Void> {
         this.in = inputStream;
     }
 
+    /**
+     * total time: 116471   (1.94118333 minutes)
+     */
+    static List<City> getCities(InputStream in) throws IOException {
+        JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
+        long begin = System.currentTimeMillis();
+        Type type = new TypeToken<List<City>>() {
+        }.getType();
+        List<City> cities = new Gson().fromJson(reader, type);
+        long diff = System.currentTimeMillis() - begin;
+        Log.e("seyi", "total time " + diff);
+        reader.close();
+        return cities;
+    }
+
+
     @Override
     protected Void doInBackground(Void... voids) {
         try {
-            readJsonWhole(in);
+            cities = readJsonWhole(in);
 //            readJsonStream(in);
         } catch (IOException e) {
-
         }
-
         return null;
     }
 
     /**
-     *  total time: 116471   (1.94118333 minutes)
+     * total time: 116471   (1.94118333 minutes)
      */
     private List<City> readJsonWhole(InputStream in) throws IOException {
         JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
         long begin = System.currentTimeMillis();
-        Type type = new TypeToken<List<City>>() {}.getType();
+        Type type = new TypeToken<List<City>>() {
+        }.getType();
         cities = new Gson().fromJson(reader, type);
         long diff = System.currentTimeMillis() - begin;
         Log.e("seyi", "total time " + diff);
