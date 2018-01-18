@@ -2,12 +2,9 @@ package com.owsega.citydirectory.view;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.widget.ViewSwitcher;
 
@@ -39,15 +36,6 @@ public class CityListActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.setTitle(getTitle());
 
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
         if (findViewById(R.id.view_switcher) != null) {
             // The view will be present only in the single-pane mode.
             // It will be absent in large-screen layouts (res/values-w900dp).
@@ -58,6 +46,8 @@ public class CityListActivity extends AppCompatActivity {
         View recyclerView = findViewById(R.id.city_list);
         assert recyclerView != null;
         setupRecyclerView((RecyclerView) recyclerView);
+
+        initializeData();
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
@@ -65,16 +55,15 @@ public class CityListActivity extends AppCompatActivity {
         recyclerView.setAdapter(new CityAdapter(this, DummyContent.ITEMS, mTwoPane));
     }
 
+    private void initializeData() {
+
+    }
+
     @Override
     public void onBackPressed() {
-        if (viewSwitcher != null) {
-            // if current view is the detail view then show list
-            View detail = viewSwitcher.getChildAt(1);
-            if (viewSwitcher.getCurrentView() == detail) {
-                showDetail(false);
-            } else {
-                super.onBackPressed();
-            }
+        // if current view is the detail view then show list
+        if (viewSwitcher != null && viewSwitcher.getDisplayedChild() == 1) {
+            showDetail(false);
         } else {
             super.onBackPressed();
         }
@@ -84,7 +73,6 @@ public class CityListActivity extends AppCompatActivity {
      * call with true to show detail, or false to show the list
      */
     public void showDetail(boolean shouldShow) {
-        Log.e("seyi", "inside showDetail");
         viewSwitcher.setDisplayedChild(shouldShow ? 1 : 0);
     }
 }

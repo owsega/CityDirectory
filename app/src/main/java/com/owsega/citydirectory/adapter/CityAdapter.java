@@ -3,15 +3,13 @@ package com.owsega.citydirectory.adapter;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.owsega.citydirectory.R;
-import com.owsega.citydirectory.model.DummyContent;
-import com.owsega.citydirectory.model.DummyContent.DummyItem;
+import com.owsega.citydirectory.model.City;
 import com.owsega.citydirectory.view.CityDetailFragment;
 import com.owsega.citydirectory.view.CityListActivity;
 
@@ -23,16 +21,14 @@ import java.util.List;
 public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
 
     private final CityListActivity mParentActivity;
-    private final List<DummyItem> mValues;
+    private final List<City> mValues;
     private final boolean mTwoPane;
     private final View.OnClickListener mOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            DummyContent.DummyItem item = (DummyContent.DummyItem) view.getTag();
-            Log.e("seyi", "inside onClick RecyView");
-            Log.e("seyi", "inside onClick RecyView " + mTwoPane);
+            City item = (City) view.getTag();
             Bundle arguments = new Bundle();
-            arguments.putString(CityDetailFragment.ARG_ITEM_ID, item.id);
+            arguments.putString(CityDetailFragment.ARG_ITEM_ID, item.name);
             CityDetailFragment fragment = new CityDetailFragment();
             fragment.setArguments(arguments);
             mParentActivity.getSupportFragmentManager().beginTransaction()
@@ -42,7 +38,6 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
             if (!mTwoPane) {
                 Context context = view.getContext();
                 CityListActivity activity = (CityListActivity) context;
-                Log.e("seyi", "accitivyt " + (activity == null));
                 if (activity != null) {
                     activity.showDetail(true);
                 }
@@ -50,7 +45,7 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
         }
     };
 
-    public CityAdapter(CityListActivity parent, List<DummyContent.DummyItem> items, boolean twoPane) {
+    public CityAdapter(CityListActivity parent, List<City> items, boolean twoPane) {
         mValues = items;
         mParentActivity = parent;
         mTwoPane = twoPane;
@@ -65,8 +60,7 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
-        holder.mIdView.setText(mValues.get(position).id);
-        holder.mContentView.setText(mValues.get(position).content);
+        holder.mView.setText(mValues.get(position).toString());
 
         holder.itemView.setTag(mValues.get(position));
         holder.itemView.setOnClickListener(mOnClickListener);
@@ -78,13 +72,11 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
-        final TextView mIdView;
-        final TextView mContentView;
+        final TextView mView;
 
         ViewHolder(View view) {
             super(view);
-            mIdView = view.findViewById(R.id.id_text);
-            mContentView = view.findViewById(R.id.content);
+            mView = view.findViewById(R.id.text);
         }
     }
 }
