@@ -1,5 +1,6 @@
 package com.owsega.citydirectory.view;
 
+import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -10,8 +11,9 @@ import android.view.View;
 import android.widget.ViewSwitcher;
 
 import com.owsega.citydirectory.R;
-import com.owsega.citydirectory.provider.CityAdapter;
 import com.owsega.citydirectory.provider.CityAdapter.OnCityClickListener;
+import com.owsega.citydirectory.provider.CityListViewModel;
+import com.owsega.citydirectory.provider.CityPagedAdapter;
 
 /**
  * An activity representing a list of Cities. This activity
@@ -21,7 +23,7 @@ import com.owsega.citydirectory.provider.CityAdapter.OnCityClickListener;
  * On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class CityListActivity extends AppCompatActivity implements OnCityClickListener {
+public class CityListActivity extends AppCompatActivity implements OnCityClickListener, CityPagedAdapter.OnCityClickListener {
 
     /**
      * When the activity is not in single-pane mode, this view will not be null
@@ -50,7 +52,12 @@ public class CityListActivity extends AppCompatActivity implements OnCityClickLi
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
-        recyclerView.setAdapter(new CityAdapter(this, this));
+        // recyclerView.setAdapter(new CityAdapter(this, this));
+        final CityPagedAdapter cityAdapter = new CityPagedAdapter(this);
+        CityListViewModel viewModel = ViewModelProviders.of(this).get(CityListViewModel.class);
+        viewModel.init(this);
+        viewModel.cityList.observe(this, cityAdapter::setList);
+        recyclerView.setAdapter(cityAdapter);
     }
 
     @Override
