@@ -18,11 +18,17 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.gson.stream.JsonReader;
 import com.owsega.citydirectory.R;
 import com.owsega.citydirectory.model.City;
 import com.owsega.citydirectory.provider.CityAdapter.OnCityClickListener;
 import com.owsega.citydirectory.provider.CityListViewModel;
 import com.owsega.citydirectory.provider.CityPagedAdapter;
+
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
+import static com.owsega.citydirectory.provider.CityListViewModel.CITIES_FILE;
 
 /**
  * An activity representing a list of Cities. This activity
@@ -32,7 +38,8 @@ import com.owsega.citydirectory.provider.CityPagedAdapter;
  * On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class CityListActivity extends AppCompatActivity implements OnCityClickListener, OnMapReadyCallback {
+public class CityListActivity extends AppCompatActivity
+        implements OnCityClickListener, OnMapReadyCallback {
 
     CityListViewModel viewModel;
     /**
@@ -57,6 +64,8 @@ public class CityListActivity extends AppCompatActivity implements OnCityClickLi
             viewSwitcher = findViewById(R.id.view_switcher);
         }
 
+        setupViewModel();
+
         View recyclerView = findViewById(R.id.city_list);
         assert recyclerView != null;
         setupRecyclerView((RecyclerView) recyclerView);
@@ -68,9 +77,20 @@ public class CityListActivity extends AppCompatActivity implements OnCityClickLi
         setupMap();
     }
 
-    private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
+    private void setupViewModel() {
         viewModel = ViewModelProviders.of(this).get(CityListViewModel.class);
-        viewModel.init(this);
+        try {
+            InputStream in = getApplicationContext().getAssets().open(CITIES_FILE);
+            JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
+            viewModel.init(reader);
+            reader.close();
+        } catch (Exception e) {
+            showError(getString(R.string.error_loading_cities));
+            e.printStackTrace();
+        }
+    }
+
+    private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
         CityPagedAdapter cityAdapter = new CityPagedAdapter(viewModel);
         viewModel.cityList.observe(this, cityAdapter::setList);
         viewModel.selectedCity.observe(this, city -> {
@@ -101,6 +121,10 @@ public class CityListActivity extends AppCompatActivity implements OnCityClickLi
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.city_map);
         mapFragment.getMapAsync(this);
+    }
+
+    public void showError(CharSequence message) {
+        Snackbar.make(viewSwitcher, message, Snackbar.LENGTH_LONG);
     }
 
     private void updateUiWithNewCity(@NonNull City city) {
@@ -137,10 +161,6 @@ public class CityListActivity extends AppCompatActivity implements OnCityClickLi
         } else {
             super.onBackPressed();
         }
-    }
-
-    public void showError(CharSequence message) {
-        Snackbar.make(viewSwitcher, message, Snackbar.LENGTH_LONG);
     }
 
     @Override

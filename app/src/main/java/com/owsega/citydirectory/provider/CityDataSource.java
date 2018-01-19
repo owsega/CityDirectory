@@ -26,6 +26,11 @@ public class CityDataSource extends ItemKeyedDataSource<String, City> {
         }
     }
 
+    public CityDataSource(ConcurrentSkipListMap<String, City> data) {
+        this.count = data.size();
+        this.cityMap = data;
+    }
+
     public CityDataSource(SortedMap<String, City> data) {
         this.count = data.size();
         this.cityMap = new ConcurrentSkipListMap<>(data);

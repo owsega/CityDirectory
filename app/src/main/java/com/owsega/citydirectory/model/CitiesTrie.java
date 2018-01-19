@@ -29,7 +29,6 @@ public class CitiesTrie {
             current = current.addChild(name.charAt(i));
         }
         current.isComplete = true;
-        current.city = city;
     }
 
     class Node {
@@ -39,10 +38,6 @@ public class CitiesTrie {
          * number of children under this node
          */
         int num;
-        /**
-         * optional City at this node. Present only when isComplete is true
-         */
-        City city;
 
         Node getChild(char c) {
             return children.get(c);
