@@ -2,18 +2,22 @@ package com.owsega.citydirectory.provider;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
+import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModel;
 import android.arch.paging.LivePagedListBuilder;
 import android.arch.paging.PagedList;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import com.owsega.citydirectory.model.CitiesTrie;
 import com.owsega.citydirectory.model.City;
 
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -28,9 +32,11 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
 
     public MutableLiveData<PagedList<City>> cityList;
     public MutableLiveData<City> selectedCity;
-    private CityDataSourceFactory dataSourceFactory;
+    public MutableLiveData<Boolean> emptyData;
     private Executor executor;
-    private LiveData<CityDataSource> cityDataSource;
+    private CitiesTrie trie;
+    private ConcurrentSkipListMap<String, City> fullData;
+    private ConcurrentSkipListMap<String, City> data;
 
     public CityListViewModel() {
     }
@@ -41,29 +47,23 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
         cityList = new MutableLiveData<>();
         executor = Executors.newFixedThreadPool(5);
 
-        setList(getCities(jsonReader));
+        initDataStructures(getAllCities(jsonReader));
+        setList(fullData);
 
         selectedCity = new MutableLiveData<>();
+        emptyData = new MutableLiveData<>();
     }
 
-    private void setList(List<City> cities) {
-        dataSourceFactory = new CityDataSourceFactory(cities);
-        cityDataSource = dataSourceFactory.getMutableLiveData();
-
-        PagedList.Config pagedListConfig =
-                new PagedList.Config.Builder()
-                        .setEnablePlaceholders(false)
-                        .setInitialLoadSizeHint(10)
-                        .setPageSize(20)
-                        .build();
-
-        cityList.postValue(new LivePagedListBuilder<>(dataSourceFactory, pagedListConfig)
-                .setBackgroundThreadExecutor(executor)
-                .build()
-                .getValue());
+    private void initDataStructures(List<City> cities) {
+        fullData = new ConcurrentSkipListMap<>();
+        for (City city : cities) {
+            fullData.put(city.toString().toLowerCase(), city);
+        }
+        data = fullData;
+        trie = LoadDataUtils.passIntoTrie(cities);
     }
 
-    private List<City> getCities(JsonReader reader) {
+    private List<City> getAllCities(JsonReader reader) {
         long begin = System.currentTimeMillis();
         Type type = new TypeToken<List<City>>() {
         }.getType();
@@ -73,8 +73,49 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
         return cities;
     }
 
-    public void filterCities(String filterText) {
-        dataSourceFactory.filterList(filterText);
+    private void setList(ConcurrentSkipListMap<String, City> cities) {
+        CityDataSourceFactory dataSourceFactory = new CityDataSourceFactory(cities);
+
+        int pageSize = cities.size() >= 20 ? 20 : cities.size();
+        PagedList.Config pagedListConfig =
+                new PagedList.Config.Builder()
+                        .setEnablePlaceholders(false)
+                        .setInitialLoadSizeHint(10)
+                        .setPageSize(pageSize)
+                        .build();
+
+        final LiveData<PagedList<City>> liveData = new LivePagedListBuilder<>(dataSourceFactory, pagedListConfig)
+                .setBackgroundThreadExecutor(executor)
+                .build();
+        liveData.observeForever(new Observer<PagedList<City>>() {
+            @Override
+            public void onChanged(@Nullable PagedList<City> cities1) {
+                cityList.postValue(cities1);
+                liveData.removeObserver(this);
+            }
+        });
+    }
+
+    public void filterCities(String text) {
+        if (text.isEmpty()) {
+            setList(fullData);
+        }
+
+        int count = trie.find(text);
+        String firstKey = fullData.ceilingKey(text);
+        if (count > 0 && firstKey != null && firstKey.startsWith(text)) {
+            ConcurrentSkipListMap<String, City> filtered = new ConcurrentSkipListMap<>();
+            String currentKey = firstKey;
+            for (int i = 0; i < count; i++) {
+                filtered.put(currentKey, fullData.get(currentKey));
+                currentKey = fullData.higherKey(currentKey);
+            }
+            data = filtered;
+        } else {
+            Log.e("seyi", "empty search");
+            emptyData.postValue(true);
+        }
+        setList(data);
     }
 
     @Override

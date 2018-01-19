@@ -9,6 +9,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ViewSwitcher;
@@ -91,10 +92,19 @@ public class CityListActivity extends AppCompatActivity
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
-        CityPagedAdapter cityAdapter = new CityPagedAdapter(viewModel);
-        viewModel.cityList.observe(this, cityAdapter::setList);
+        final CityPagedAdapter cityAdapter = new CityPagedAdapter(viewModel);
+        viewModel.cityList.observe(this, pagedList -> {
+            if (pagedList == null)
+                Log.e("seyi", "CityListActivity just observed a null list ");
+            else
+                Log.e("seyi", "CityListActivity just observed a list " + pagedList.size());
+            cityAdapter.setList(pagedList);
+        });
         viewModel.selectedCity.observe(this, city -> {
             if (city != null) updateUiWithNewCity(city);
+        });
+        viewModel.emptyData.observe(this, isEmpty -> {
+            Log.e("seyi", "emptyData bool observed " + isEmpty);
         });
         // recyclerView.setAdapter(new CityAdapter(this, this));
         recyclerView.setAdapter(cityAdapter);
@@ -112,7 +122,7 @@ public class CityListActivity extends AppCompatActivity
 
             @Override
             public void afterTextChanged(Editable s) {
-                filterList(s.toString());
+                viewModel.filterCities(s.toString().trim());
             }
         });
     }
@@ -138,10 +148,6 @@ public class CityListActivity extends AppCompatActivity
                 getSupportActionBar().setTitle(city.toString());
             }
         }
-    }
-
-    private void filterList(String text) {
-        viewModel.filterCities(text);
     }
 
     /**
