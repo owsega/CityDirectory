@@ -104,6 +104,7 @@ public class CityListActivity extends AppCompatActivity implements OnCityClickLi
      */
     public void showDetail(boolean shouldShow) {
         viewSwitcher.setDisplayedChild(shouldShow ? 1 : 0);
+        if (!shouldShow) setTitle(R.string.app_name);
     }
 
     @Override

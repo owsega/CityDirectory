@@ -2,6 +2,7 @@ package com.owsega.citydirectory.view;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -52,5 +53,13 @@ public class CityDetailFragment extends Fragment {
         }
 
         return rootView;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (getActivity() != null) {
+            getActivity().setTitle(city.toString());
+        }
     }
 }
