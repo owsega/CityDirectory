@@ -15,6 +15,7 @@ import com.google.gson.stream.JsonReader;
 import com.owsega.citydirectory.model.CitiesTrie;
 import com.owsega.citydirectory.model.City;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -26,8 +27,8 @@ import java.util.concurrent.Executors;
  */
 public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnCityClickListener {
 
-    public static final String CITIES_FILE = "cities.json";
-    //    public static final String CITIES_FILE = "smallcities.json";
+    //    public static final String CITIES_FILE = "cities.json";
+    public static final String CITIES_FILE = "smallcities.json";
     private static final String TAG = "CityListViewModel";
 
     public MutableLiveData<PagedList<City>> cityList;
@@ -46,15 +47,20 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
 
     public void init(final JsonReader jsonReader) {
         if (dataIsReady) dataReady.postValue(true);
-        if (executor != null && cityList != null) return;
+        if (executor != null && cityList != null) {
+            try {
+                jsonReader.close();
+            } catch (IOException ignored) {
+            }
+            return;
+        }
 
         cityList = new MutableLiveData<>();
         selectedCity = new MutableLiveData<>();
         emptyData = new MutableLiveData<>();
 
         executor = Executors.newFixedThreadPool(5);
-//        executor.execute(() -> initDataStructures(getAllCities(jsonReader)));
-
+//        Executors.newSingleThreadExecutor().execute(() -> getAllCities(jsonReader));
         initDataStructures(getAllCities(jsonReader));
     }
 
@@ -71,16 +77,23 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
     }
 
     private List<City> getAllCities(JsonReader reader) {
+        Log.d(TAG, "starting getAllcities");
         long time = System.currentTimeMillis();
         Type type = new TypeToken<List<City>>() {
         }.getType();
         List<City> cities = new Gson().fromJson(reader, type);
         time = System.currentTimeMillis() - time;
         Log.d(TAG, "time to parse json " + time);
+        initDataStructures(cities);
+        try {
+            reader.close();
+        } catch (IOException ignored) {
+        }
         return cities;
     }
 
     private CitiesTrie passIntoTrie(List<City> cities) {
+        Log.d(TAG, "starting passIntoTrie");
         CitiesTrie trie = new CitiesTrie();
 
         long time = System.currentTimeMillis();
@@ -134,6 +147,39 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
             emptyData.postValue(true);
         }
     }
+/*
+
+    ConcurrentSkipListMap<String, City> filterWith(String text) {
+        ConcurrentSkipListMap<String, City> newMap;
+
+        Log.e("seyi", "filtering with " + text);
+        String lowerBound = cityMap.floorKey(text);
+        Log.e("seyi", "lowerBound " + lowerBound);
+
+        int len = text.length() - 1;
+        String higherBound = text.substring(0, len) + (char) (text.charAt(len) + 1);
+        Log.e("seyi", "higherBoundText " + higherBound);
+        higherBound = cityMap.ceilingKey(higherBound);
+        Log.e("seyi", "higherBound " + higherBound);
+
+        if (lowerBound == null || higherBound == null) {
+            // this can occur when the filter is not a suitable filter
+            // todo bad design ... loadInitial will fail for new data source
+            // todo return empty map
+//            return new ConcurrentSkipListMap<>();
+            String first = cityMap.firstKey();
+            String second = cityMap.higherKey(first);
+            newMap = new ConcurrentSkipListMap<>(cityMap.subMap(first, second));
+        } else {
+            // todo handle scenarios where lists contain aaa, ccc and b is used to filter (empty results too)
+            // todo catch inconsistent bounds exception too. and handle empty
+            newMap = new ConcurrentSkipListMap<>(
+                    cityMap.subMap(lowerBound, lowerBound.startsWith(text), higherBound, false));
+        }
+        Log.e("seyi", "newMap size " + newMap.size());
+        return newMap;
+    }
+*/
 
     @Override
     public void onCityClicked(City city) {

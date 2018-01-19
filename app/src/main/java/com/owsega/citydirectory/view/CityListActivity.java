@@ -91,7 +91,6 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
             InputStream in = getApplicationContext().getAssets().open(CITIES_FILE);
             JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
             viewModel.init(reader);
-            reader.close();
         } catch (Exception e) {
             showError(getString(R.string.error_loading_cities));
             e.printStackTrace();
