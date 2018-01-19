@@ -1,7 +1,6 @@
 package com.owsega.citydirectory.provider;
 
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,7 +8,6 @@ import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.owsega.citydirectory.R;
-import com.owsega.citydirectory.model.CitiesTrie;
 import com.owsega.citydirectory.model.City;
 import com.owsega.citydirectory.view.CityListActivity;
 
@@ -41,13 +39,8 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
         try {
             InputStream citiesStream = context.getAssets().open(CITIES_FILE);
             if (citiesStream != null) {
-                // new LoadDataTask(this, citiesStream).execute();
-                cities = LoadDataTask.getCities(citiesStream);
-                CitiesTrie trie = LoadDataTask.passIntoTrie(cities);
-                Log.e("seyi", "testing trie");
-                Log.e("seyi", "search Novinki: " + trie.find("Novinki"));
-                Log.e("seyi", "search G: " + trie.find("G"));
-                Log.e("seyi", "search qq: " + trie.find("qq"));
+                // new LoadDataUtils(this, citiesStream).execute();
+                cities = LoadDataUtils.getCities(citiesStream);
             }
         } catch (IOException e) {
             context.showError(context.getString(R.string.error_loading_cities));

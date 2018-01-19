@@ -1,6 +1,7 @@
 package com.owsega.citydirectory.provider;
 
 import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModel;
 import android.arch.paging.LivePagedListBuilder;
 import android.arch.paging.PagedList;
@@ -23,16 +24,17 @@ import java.util.concurrent.Executors;
 /**
  * ViewModel for CityListActivity. Provides data to be shown in the activity
  */
-public class CityListViewModel extends ViewModel {
+public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnCityClickListener {
 
     //    private static final String CITIES_FILE = "cities.json";
     private static final String CITIES_FILE = "smallcities.json";
     private static final String TAG = "CityListViewModel";
 
     public LiveData<PagedList<City>> cityList;
+    public MutableLiveData<City> selectedCity;
     private CityDataSourceFactory dataSourceFactory;
     private Executor executor;
-    private City selectedCity;
+//    CitiesTrie trie = LoadDataUtils.passIntoTrie(cities);
 
     public CityListViewModel() {
     }
@@ -63,6 +65,8 @@ public class CityListViewModel extends ViewModel {
         cityList = new LivePagedListBuilder(dataSourceFactory, pagedListConfig)
                 .setBackgroundThreadExecutor(executor)
                 .build();
+
+        selectedCity = new MutableLiveData<>();
     }
 
     private List<City> getCities(Context context) throws IOException {
@@ -82,11 +86,8 @@ public class CityListViewModel extends ViewModel {
         dataSourceFactory.filterList(filterText);
     }
 
-    public City getSelectedCity() {
-        return selectedCity;
-    }
-
-    public void setSelectedCity(City selectedCity) {
-        this.selectedCity = selectedCity;
+    @Override
+    public void onCityClicked(City city) {
+        selectedCity.postValue(city);
     }
 }

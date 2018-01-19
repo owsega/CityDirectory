@@ -1,6 +1,5 @@
 package com.owsega.citydirectory.provider;
 
-import android.os.AsyncTask;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -13,19 +12,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * AsyncTask for loading data
+ * Utils for loading data
  */
-public class LoadDataTask extends AsyncTask<Void, Void, Void> {
-
-    private List<City> cities;
-    private InputStream in;
-
-    public LoadDataTask(InputStream inputStream) {
-        this.in = inputStream;
-    }
+public class LoadDataUtils {
 
     /**
      * total time: 116471   (1.94118333 minutes)
@@ -42,7 +35,7 @@ public class LoadDataTask extends AsyncTask<Void, Void, Void> {
         return cities;
     }
 
-    public static CitiesTrie passIntoTrie(List<City> cities) {
+    static CitiesTrie passIntoTrie(List<City> cities) {
         CitiesTrie trie = new CitiesTrie();
 
         long begin = System.currentTimeMillis();
@@ -54,25 +47,15 @@ public class LoadDataTask extends AsyncTask<Void, Void, Void> {
         return trie;
     }
 
-    @Override
-    protected Void doInBackground(Void... voids) {
-        try {
-            cities = readJsonWhole(in);
-//            readJsonStream(in);
-        } catch (IOException e) {
-        }
-        return null;
-    }
-
     /**
      * total time: 116471   (1.94118333 minutes)
      */
-    private List<City> readJsonWhole(InputStream in) throws IOException {
+    static List<City> readJsonWhole(InputStream in) throws IOException {
         JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
         long begin = System.currentTimeMillis();
         Type type = new TypeToken<List<City>>() {
         }.getType();
-        cities = new Gson().fromJson(reader, type);
+        List<City> cities = new Gson().fromJson(reader, type);
         long diff = System.currentTimeMillis() - begin;
         Log.e("seyi", "total time " + diff);
         reader.close();
@@ -82,7 +65,8 @@ public class LoadDataTask extends AsyncTask<Void, Void, Void> {
     /**
      * cities size: 209557, total time 1005445  (16.75741667 minutes)
      */
-    public List<City> readJsonStream(InputStream in) throws IOException {
+    static List<City> readJsonStream(InputStream in) throws IOException {
+        List<City> cities = new ArrayList<>();
         JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
         reader.beginArray();
         long begin = System.currentTimeMillis();
