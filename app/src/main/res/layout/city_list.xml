@@ -21,14 +21,25 @@
             android:layout_marginRight="16dp"
             android:hint="@string/search"/>
 
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/city_list"
-            android:name="com.owsega.citydirectory.CityListFragment"
+        <ViewSwitcher
+            android:id="@+id/listViewWrapper"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layoutManager="LinearLayoutManager"
-            tools:listitem="@layout/city_list_content"/>
+            android:layout_height="match_parent">
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/city_list"
+                android:name="com.owsega.citydirectory.CityListFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layoutManager="LinearLayoutManager"
+                tools:listitem="@layout/city_list_content"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="16dp"
+                android:text="@string/no_data"/>
+        </ViewSwitcher>
     </LinearLayout>
 
     <fragment xmlns:map="http://schemas.android.com/apk/res-auto"

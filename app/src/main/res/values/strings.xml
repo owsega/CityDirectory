@@ -4,4 +4,5 @@
     <string name="google_maps_key">AIzaSyC8JkT20wk4NvpmYXZrCdtTekib3ZHre_8</string>
     <string name="error_loading_cities">Error while loading cities data</string>
     <string name="search">Search</string>
+    <string name="no_data">No data available</string>
 </resources>

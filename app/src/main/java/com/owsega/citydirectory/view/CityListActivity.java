@@ -48,6 +48,10 @@ public class CityListActivity extends AppCompatActivity
      * When the activity is not in single-pane mode, this view will not be null
      */
     private ViewSwitcher viewSwitcher;
+    /**
+     * toggles between the list view and a text view (for empty lists scenario)
+     */
+    private ViewSwitcher listViewWrapper;
     private CoordinatorLayout coordinator;
     private GoogleMap cityMap;
 
@@ -61,6 +65,7 @@ public class CityListActivity extends AppCompatActivity
         toolbar.setTitle(getTitle());
 
         coordinator = findViewById(R.id.coordinator);
+        listViewWrapper = findViewById(R.id.listViewWrapper);
 
         if (findViewById(R.id.view_switcher) != null) {
             // The view will be present only in the single-pane mode.
@@ -98,16 +103,20 @@ public class CityListActivity extends AppCompatActivity
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
         final CityPagedAdapter cityAdapter = new CityPagedAdapter(viewModel);
         viewModel.cityList.observe(this, pagedList -> {
-            if (pagedList == null)
+            if (pagedList == null) {
                 Log.e("seyi", "CityListActivity just observed a null list ");
-            else
+                showEmptyListMessage(true);
+            } else {
+                showEmptyListMessage(false);
                 Log.e("seyi", "CityListActivity just observed a list " + pagedList.size());
+            }
             cityAdapter.setList(pagedList);
         });
         viewModel.selectedCity.observe(this, city -> {
             if (city != null) updateUiWithNewCity(city);
         });
         viewModel.emptyData.observe(this, isEmpty -> {
+            if (isEmpty != null) showEmptyListMessage(isEmpty);
             Log.e("seyi", "emptyData bool observed " + isEmpty);
         });
         // recyclerView.setAdapter(new CityAdapter(this, this));
@@ -139,6 +148,13 @@ public class CityListActivity extends AppCompatActivity
 
     public void showError(CharSequence message) {
         Snackbar.make(coordinator, message, Snackbar.LENGTH_LONG);
+    }
+
+    /**
+     * call with true to show message indicating no data on the list, or false to show the list
+     */
+    public void showEmptyListMessage(boolean shouldShow) {
+        listViewWrapper.setDisplayedChild(shouldShow ? 1 : 0);
     }
 
     private void updateUiWithNewCity(@NonNull City city) {

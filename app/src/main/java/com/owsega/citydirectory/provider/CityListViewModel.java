@@ -36,7 +36,6 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
     private Executor executor;
     private CitiesTrie trie;
     private ConcurrentSkipListMap<String, City> fullData;
-    private ConcurrentSkipListMap<String, City> data;
 
     public CityListViewModel() {
     }
@@ -59,7 +58,6 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
         for (City city : cities) {
             fullData.put(city.toString().toLowerCase(), city);
         }
-        data = fullData;
         trie = LoadDataUtils.passIntoTrie(cities);
     }
 
@@ -110,12 +108,11 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
                 filtered.put(currentKey, fullData.get(currentKey));
                 currentKey = fullData.higherKey(currentKey);
             }
-            data = filtered;
+            setList(filtered);
         } else {
             Log.e("seyi", "empty search");
             emptyData.postValue(true);
         }
-        setList(data);
     }
 
     @Override
