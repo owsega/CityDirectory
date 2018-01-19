@@ -10,7 +10,6 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ViewSwitcher;
@@ -23,7 +22,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.stream.JsonReader;
 import com.owsega.citydirectory.R;
 import com.owsega.citydirectory.model.City;
-import com.owsega.citydirectory.provider.CityAdapter.OnCityClickListener;
 import com.owsega.citydirectory.provider.CityListViewModel;
 import com.owsega.citydirectory.provider.CityPagedAdapter;
 
@@ -40,8 +38,7 @@ import static com.owsega.citydirectory.provider.CityListViewModel.CITIES_FILE;
  * On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class CityListActivity extends AppCompatActivity
-        implements OnCityClickListener, OnMapReadyCallback {
+public class CityListActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     CityListViewModel viewModel;
     /**
@@ -103,13 +100,7 @@ public class CityListActivity extends AppCompatActivity
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
         final CityPagedAdapter cityAdapter = new CityPagedAdapter(viewModel);
         viewModel.cityList.observe(this, pagedList -> {
-            if (pagedList == null) {
-                Log.e("seyi", "CityListActivity just observed a null list ");
-                showEmptyListMessage(true);
-            } else {
-                showEmptyListMessage(false);
-                Log.e("seyi", "CityListActivity just observed a list " + pagedList.size());
-            }
+            showEmptyListMessage(pagedList == null);
             cityAdapter.setList(pagedList);
         });
         viewModel.selectedCity.observe(this, city -> {
@@ -117,9 +108,7 @@ public class CityListActivity extends AppCompatActivity
         });
         viewModel.emptyData.observe(this, isEmpty -> {
             if (isEmpty != null) showEmptyListMessage(isEmpty);
-            Log.e("seyi", "emptyData bool observed " + isEmpty);
         });
-        // recyclerView.setAdapter(new CityAdapter(this, this));
         recyclerView.setAdapter(cityAdapter);
     }
 
@@ -192,9 +181,5 @@ public class CityListActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
         cityMap = googleMap;
-    }
-
-    @Override
-    public void onCityClicked(String city) {
     }
 }

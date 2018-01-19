@@ -2,7 +2,6 @@ package com.owsega.citydirectory.provider;
 
 import android.arch.paging.ItemKeyedDataSource;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.owsega.citydirectory.model.City;
 
@@ -89,7 +88,6 @@ public class CityDataSource extends ItemKeyedDataSource<String, City> {
     }
 
     public ConcurrentNavigableMap<String, City> filterWith(String text) {
-        Log.e("seyi", "filtering with " + text);
         String lowerBound = cityMap.floorKey(text);
         int len = text.length() - 1;
         String higherBound = text.substring(0, len) + (char) (text.charAt(len) + 1);

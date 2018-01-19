@@ -26,7 +26,7 @@ import java.util.concurrent.Executors;
  */
 public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnCityClickListener {
 
-    //    private static final String CITIES_FILE = "cities.json";
+    //        private static final String CITIES_FILE = "cities.json";
     public static final String CITIES_FILE = "smallcities.json";
     private static final String TAG = "CityListViewModel";
 
@@ -58,7 +58,7 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
         for (City city : cities) {
             fullData.put(city.toString().toLowerCase(), city);
         }
-        trie = LoadDataUtils.passIntoTrie(cities);
+        trie = passIntoTrie(cities);
     }
 
     private List<City> getAllCities(JsonReader reader) {
@@ -67,18 +67,17 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
         }.getType();
         List<City> cities = new Gson().fromJson(reader, type);
         long diff = System.currentTimeMillis() - begin;
-        Log.e(TAG, "time to parse json " + diff);
+        Log.d(TAG, "time to parse json " + diff);
         return cities;
     }
 
     private void setList(ConcurrentSkipListMap<String, City> cities) {
         CityDataSourceFactory dataSourceFactory = new CityDataSourceFactory(cities);
 
-        int pageSize = cities.size() >= 20 ? 20 : cities.size();
+        int pageSize = cities.size() >= 30 ? 30 : cities.size();
         PagedList.Config pagedListConfig =
                 new PagedList.Config.Builder()
                         .setEnablePlaceholders(false)
-                        .setInitialLoadSizeHint(10)
                         .setPageSize(pageSize)
                         .build();
 
@@ -92,6 +91,17 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
                 liveData.removeObserver(this);
             }
         });
+    }
+
+    private CitiesTrie passIntoTrie(List<City> cities) {
+        CitiesTrie trie = new CitiesTrie();
+
+        long begin = System.currentTimeMillis();
+        for (City city : cities) {
+            trie.add(city);
+        }
+        long diff = System.currentTimeMillis() - begin;
+        return trie;
     }
 
     public void filterCities(String text) {
@@ -110,7 +120,7 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
             }
             setList(filtered);
         } else {
-            Log.e("seyi", "empty search");
+            Log.d("seyi", "empty search");
             emptyData.postValue(true);
         }
     }
