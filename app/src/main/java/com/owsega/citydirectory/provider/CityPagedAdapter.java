@@ -18,13 +18,13 @@ import com.owsega.citydirectory.provider.CityPagedAdapter.ViewHolder;
 public class CityPagedAdapter extends PagedListAdapter<City, ViewHolder> {
 
     private final OnCityClickListener cityClickListener;
-    private Gson gson = new Gson();
     private final View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            cityClickListener.onCityClicked(gson.toJson(view.getTag()));
+            cityClickListener.onCityClicked((City) view.getTag());
         }
     };
+    private Gson gson = new Gson();
 
     public CityPagedAdapter(OnCityClickListener listener) {
         super(City.DIFF_CALLBACK);
@@ -47,7 +47,7 @@ public class CityPagedAdapter extends PagedListAdapter<City, ViewHolder> {
     }
 
     public interface OnCityClickListener {
-        void onCityClicked(String city);
+        void onCityClicked(City city);
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {

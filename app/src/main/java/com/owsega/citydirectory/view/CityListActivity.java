@@ -13,7 +13,13 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ViewSwitcher;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
 import com.owsega.citydirectory.R;
+import com.owsega.citydirectory.model.City;
 import com.owsega.citydirectory.provider.CityAdapter.OnCityClickListener;
 import com.owsega.citydirectory.provider.CityListViewModel;
 import com.owsega.citydirectory.provider.CityPagedAdapter;
@@ -22,17 +28,18 @@ import com.owsega.citydirectory.provider.CityPagedAdapter;
  * An activity representing a list of Cities. This activity
  * has different presentations for handset and tablet-size devices. On
  * handsets, the activity presents a list of items, which when touched,
- * opens a {@link CityDetailFragment} representing item details.
+ * opens a map representing item details by showing a map.
  * On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class CityListActivity extends AppCompatActivity implements OnCityClickListener, CityPagedAdapter.OnCityClickListener {
+public class CityListActivity extends AppCompatActivity implements OnCityClickListener, CityPagedAdapter.OnCityClickListener, OnMapReadyCallback {
 
     CityListViewModel viewModel;
     /**
      * When the activity is not in single-pane mode, this view will not be null
      */
     private ViewSwitcher viewSwitcher;
+    private GoogleMap cityMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +64,8 @@ public class CityListActivity extends AppCompatActivity implements OnCityClickLi
         EditText editText = findViewById(R.id.search_view);
         assert editText != null;
         setupSearchView(editText);
+
+        setupMap();
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
@@ -85,6 +94,12 @@ public class CityListActivity extends AppCompatActivity implements OnCityClickLi
         });
     }
 
+    private void setupMap() {
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.city_map);
+        mapFragment.getMapAsync(this);
+    }
+
     private void filterList(String text) {
         viewModel.filterCities(text);
     }
@@ -103,19 +118,23 @@ public class CityListActivity extends AppCompatActivity implements OnCityClickLi
      * call with true to show detail, or false to show the list
      */
     public void showDetail(boolean shouldShow) {
+        // todo should be posted from viewmodel
         viewSwitcher.setDisplayedChild(shouldShow ? 1 : 0);
-        if (!shouldShow) setTitle(R.string.app_name);
+        String title = getString(R.string.app_name);
+
+        if (shouldShow && viewModel.getSelectedCity() != null)
+            title = viewModel.getSelectedCity().toString();
+        getSupportActionBar().setTitle(title);
     }
 
     @Override
-    public void onCityClicked(String city) {
-        Bundle arguments = new Bundle();
-        arguments.putString(CityDetailFragment.ARG_CITY, city);
-        CityDetailFragment fragment = new CityDetailFragment();
-        fragment.setArguments(arguments);
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.city_detail_container, fragment)
-                .commit();
+    public void onCityClicked(City city) {
+        viewModel.setSelectedCity(city); //use LiveData
+        if (cityMap != null) {
+            cityMap.animateCamera(
+                    CameraUpdateFactory.newLatLng(
+                            new LatLng(city.coord.lat, city.coord.lon)));
+        }
 
         if (viewSwitcher != null) {
             showDetail(true);
@@ -124,5 +143,16 @@ public class CityListActivity extends AppCompatActivity implements OnCityClickLi
 
     public void showError(CharSequence message) {
         Snackbar.make(viewSwitcher, message, Snackbar.LENGTH_LONG);
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        cityMap = googleMap;
+        //todo for better UX, have a waiting location in ViewModel to set the map to in case
+        // use clicks while it is not yet ready
+    }
+
+    @Override
+    public void onCityClicked(String city) {
     }
 }

@@ -32,6 +32,7 @@ public class CityListViewModel extends ViewModel {
     public LiveData<PagedList<City>> cityList;
     private CityDataSourceFactory dataSourceFactory;
     private Executor executor;
+    private City selectedCity;
 
     public CityListViewModel() {
     }
@@ -79,5 +80,13 @@ public class CityListViewModel extends ViewModel {
 
     public void filterCities(String filterText) {
         dataSourceFactory.filterList(filterText);
+    }
+
+    public City getSelectedCity() {
+        return selectedCity;
+    }
+
+    public void setSelectedCity(City selectedCity) {
+        this.selectedCity = selectedCity;
     }
 }
