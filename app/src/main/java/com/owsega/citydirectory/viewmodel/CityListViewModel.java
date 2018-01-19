@@ -26,8 +26,8 @@ import java.util.concurrent.Executors;
  */
 public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnCityClickListener {
 
-    //    public static final String CITIES_FILE = "cities.json";
-    public static final String CITIES_FILE = "smallcities.json";
+    public static final String CITIES_FILE = "cities.json";
+    //    public static final String CITIES_FILE = "smallcities.json";
     private static final String TAG = "CityListViewModel";
 
     public MutableLiveData<PagedList<City>> cityList;
@@ -49,14 +49,13 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
         if (executor != null && cityList != null) return;
 
         cityList = new MutableLiveData<>();
-        executor = Executors.newFixedThreadPool(5);
-
-        executor.execute(() -> initDataStructures(getAllCities(jsonReader)));
-
-        setList(fullData);
-
         selectedCity = new MutableLiveData<>();
         emptyData = new MutableLiveData<>();
+
+        executor = Executors.newFixedThreadPool(5);
+//        executor.execute(() -> initDataStructures(getAllCities(jsonReader)));
+
+        initDataStructures(getAllCities(jsonReader));
     }
 
     private void initDataStructures(List<City> cities) {
@@ -67,16 +66,30 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
         trie = passIntoTrie(cities);
         dataIsReady = true;
         dataReady.postValue(true);
+
+        setList(fullData);
     }
 
     private List<City> getAllCities(JsonReader reader) {
-        long begin = System.currentTimeMillis();
+        long time = System.currentTimeMillis();
         Type type = new TypeToken<List<City>>() {
         }.getType();
         List<City> cities = new Gson().fromJson(reader, type);
-        long diff = System.currentTimeMillis() - begin;
-        Log.d(TAG, "time to parse json " + diff);
+        time = System.currentTimeMillis() - time;
+        Log.d(TAG, "time to parse json " + time);
         return cities;
+    }
+
+    private CitiesTrie passIntoTrie(List<City> cities) {
+        CitiesTrie trie = new CitiesTrie();
+
+        long time = System.currentTimeMillis();
+        for (City city : cities) {
+            trie.add(city);
+        }
+        time = System.currentTimeMillis() - time;
+        Log.d(TAG, "Time to build Trie " + time);
+        return trie;
     }
 
     private void setList(ConcurrentSkipListMap<String, City> cities) {
@@ -99,18 +112,6 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
                 liveData.removeObserver(this);
             }
         });
-    }
-
-    private CitiesTrie passIntoTrie(List<City> cities) {
-        CitiesTrie trie = new CitiesTrie();
-
-        long time = System.currentTimeMillis();
-        for (City city : cities) {
-            trie.add(city);
-        }
-        time = System.currentTimeMillis() - time;
-        Log.e(TAG, "Time to build Trie");
-        return trie;
     }
 
     public void filterCities(String text) {
