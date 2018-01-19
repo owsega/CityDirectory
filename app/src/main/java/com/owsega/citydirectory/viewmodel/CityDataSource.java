@@ -8,7 +8,6 @@ import com.owsega.citydirectory.model.City;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.SortedMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -17,22 +16,9 @@ public class CityDataSource extends ItemKeyedDataSource<String, City> {
     private ConcurrentSkipListMap<String, City> cityMap;
     private int count;
 
-    public CityDataSource(List<City> data) {
-        this.count = data.size();
-        this.cityMap = new ConcurrentSkipListMap<>();
-        for (City city : data) {
-            cityMap.put(city.toString(), city);
-        }
-    }
-
     public CityDataSource(ConcurrentSkipListMap<String, City> data) {
         this.count = data.size();
         this.cityMap = data;
-    }
-
-    public CityDataSource(SortedMap<String, City> data) {
-        this.count = data.size();
-        this.cityMap = new ConcurrentSkipListMap<>(data);
     }
 
     @Override

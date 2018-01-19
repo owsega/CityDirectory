@@ -23,7 +23,7 @@ public class CitiesTrie {
     }
 
     public void add(City city) {
-        String name = city.toString().toLowerCase();
+        String name = city.getKey();
         Node current = start;
         for (int i = 0; i < name.length(); i++) {
             current = current.addChild(name.charAt(i));

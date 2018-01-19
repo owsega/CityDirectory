@@ -40,6 +40,13 @@ public class City implements Comparable<City> {
         return name + ", " + country;
     }
 
+    /**
+     * @return a key suitable to use as key to this city in a Map
+     */
+    public String getKey() {
+        return this.toString().toLowerCase();
+    }
+
     public class Coord {
         public float lon;
         public float lat;

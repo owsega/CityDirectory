@@ -12,7 +12,6 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import com.owsega.citydirectory.model.CitiesTrie;
 import com.owsega.citydirectory.model.City;
 
 import java.io.IOException;
@@ -28,8 +27,8 @@ import java.util.concurrent.Executors;
  */
 public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnCityClickListener {
 
-    //    public static final String CITIES_FILE = "cities.json";
-    public static final String CITIES_FILE = "smallcities.json";
+    public static final String CITIES_FILE = "cities.json";
+    //    public static final String CITIES_FILE = "smallcities.json";
     private static final String TAG = "CityListViewModel";
 
     public MutableLiveData<PagedList<City>> cityList;
@@ -38,7 +37,6 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
     public MutableLiveData<Boolean> emptyData;
     private boolean dataIsReady;
     private Executor executor;
-    //  private CitiesTrie trie;
     private ConcurrentSkipListMap<String, City> fullData;
 
     public CityListViewModel() {
@@ -62,19 +60,7 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
 
         executor = Executors.newFixedThreadPool(5);
 //        Executors.newSingleThreadExecutor().execute(() -> getAllCities(jsonReader));
-        initDataStructures(getAllCities(jsonReader));
-    }
-
-    private void initDataStructures(List<City> cities) {
-        fullData = new ConcurrentSkipListMap<>();
-        for (City city : cities) {
-            fullData.put(city.toString().toLowerCase(), city);
-        }
-        //trie = passIntoTrie(cities);
-        dataIsReady = true;
-        dataReady.postValue(true);
-
-        setList(fullData);
+        getAllCities(jsonReader);
     }
 
     private List<City> getAllCities(JsonReader reader) {
@@ -85,12 +71,23 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
         List<City> cities = new Gson().fromJson(reader, type);
         time = System.currentTimeMillis() - time;
         Log.d(TAG, "time to parse json " + time);
-        initDataStructures(cities);
+        ConcurrentSkipListMap<String, City> citiesMap = new ConcurrentSkipListMap<>();
+        for (City city : cities) {
+            citiesMap.put(city.getKey(), city);
+        }
+        initDataStructures(citiesMap);
         try {
             reader.close();
         } catch (IOException ignored) {
         }
         return cities;
+    }
+
+    private void initDataStructures(ConcurrentSkipListMap cities) {
+        fullData = cities;
+        dataIsReady = true;
+        dataReady.postValue(true);
+        setList(fullData);
     }
 
     private void setList(ConcurrentSkipListMap<String, City> cities) {
@@ -115,25 +112,11 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
         });
     }
 
-    private CitiesTrie passIntoTrie(List<City> cities) {
-        Log.d(TAG, "starting passIntoTrie");
-        CitiesTrie trie = new CitiesTrie();
-
-        long time = System.currentTimeMillis();
-        for (City city : cities) {
-            trie.add(city);
-        }
-        time = System.currentTimeMillis() - time;
-        Log.d(TAG, "Time to build Trie " + time);
-        return trie;
-    }
-
     public void filterCities(String text) {
         if (text.isEmpty()) {
             setList(fullData);
         } else {
             filterWithMap(text);
-//            filterWithTrie(text);
         }
     }
 
@@ -158,23 +141,6 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
             } catch (Exception e) {
                 emptyData.postValue(true);
             }
-        }
-    }
-
-    private void filterWithTrie(String text) {
-        int count = 10;//trie.find(text);
-        String firstKey = fullData.ceilingKey(text);
-        if (count > 0 && firstKey != null && firstKey.startsWith(text)) {
-            ConcurrentSkipListMap<String, City> filtered = new ConcurrentSkipListMap<>();
-            String currentKey = firstKey;
-            for (int i = 0; i < count; i++) {
-                filtered.put(currentKey, fullData.get(currentKey));
-                currentKey = fullData.higherKey(currentKey);
-            }
-            setList(filtered);
-        } else {
-            Log.d("seyi", "empty search");
-            emptyData.postValue(true);
         }
     }
 
