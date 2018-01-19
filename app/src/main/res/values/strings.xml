@@ -5,4 +5,7 @@
     <string name="error_loading_cities">Error while loading cities data</string>
     <string name="search">Search</string>
     <string name="no_data">No data available</string>
+    <string name="progressbar_text">"Loading data …
+This make take a minute
+or more"</string>
 </resources>

@@ -1,4 +1,4 @@
-package com.owsega.citydirectory.provider;
+package com.owsega.citydirectory.viewmodel;
 
 import android.arch.paging.ItemKeyedDataSource;
 import android.support.annotation.NonNull;

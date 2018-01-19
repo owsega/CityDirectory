@@ -1,4 +1,4 @@
-package com.owsega.citydirectory.provider;
+package com.owsega.citydirectory.viewmodel;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
@@ -26,27 +26,33 @@ import java.util.concurrent.Executors;
  */
 public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnCityClickListener {
 
-    //        private static final String CITIES_FILE = "cities.json";
+    //    public static final String CITIES_FILE = "cities.json";
     public static final String CITIES_FILE = "smallcities.json";
     private static final String TAG = "CityListViewModel";
 
     public MutableLiveData<PagedList<City>> cityList;
     public MutableLiveData<City> selectedCity;
+    public MutableLiveData<Boolean> dataReady;
     public MutableLiveData<Boolean> emptyData;
+    private boolean dataIsReady;
     private Executor executor;
     private CitiesTrie trie;
     private ConcurrentSkipListMap<String, City> fullData;
 
     public CityListViewModel() {
+        dataIsReady = false;
+        dataReady = new MutableLiveData<>();
     }
 
-    public void init(JsonReader jsonReader) {
+    public void init(final JsonReader jsonReader) {
+        if (dataIsReady) dataReady.postValue(true);
         if (executor != null && cityList != null) return;
 
         cityList = new MutableLiveData<>();
         executor = Executors.newFixedThreadPool(5);
 
-        initDataStructures(getAllCities(jsonReader));
+        executor.execute(() -> initDataStructures(getAllCities(jsonReader)));
+
         setList(fullData);
 
         selectedCity = new MutableLiveData<>();
@@ -59,6 +65,8 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
             fullData.put(city.toString().toLowerCase(), city);
         }
         trie = passIntoTrie(cities);
+        dataIsReady = true;
+        dataReady.postValue(true);
     }
 
     private List<City> getAllCities(JsonReader reader) {
@@ -96,11 +104,12 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
     private CitiesTrie passIntoTrie(List<City> cities) {
         CitiesTrie trie = new CitiesTrie();
 
-        long begin = System.currentTimeMillis();
+        long time = System.currentTimeMillis();
         for (City city : cities) {
             trie.add(city);
         }
-        long diff = System.currentTimeMillis() - begin;
+        time = System.currentTimeMillis() - time;
+        Log.e(TAG, "Time to build Trie");
         return trie;
     }
 

@@ -22,13 +22,13 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.stream.JsonReader;
 import com.owsega.citydirectory.R;
 import com.owsega.citydirectory.model.City;
-import com.owsega.citydirectory.provider.CityListViewModel;
-import com.owsega.citydirectory.provider.CityPagedAdapter;
+import com.owsega.citydirectory.viewmodel.CityListViewModel;
+import com.owsega.citydirectory.viewmodel.CityPagedAdapter;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import static com.owsega.citydirectory.provider.CityListViewModel.CITIES_FILE;
+import static com.owsega.citydirectory.viewmodel.CityListViewModel.CITIES_FILE;
 
 /**
  * An activity representing a list of Cities. This activity
@@ -71,17 +71,18 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
             viewSwitcher = findViewById(R.id.view_switcher);
         }
 
+        setupMap();
+
         setupViewModel();
 
-        View recyclerView = findViewById(R.id.city_list);
-        assert recyclerView != null;
-        setupRecyclerView((RecyclerView) recyclerView);
+        // initListAndSearchView();
 
-        EditText editText = findViewById(R.id.search_view);
-        assert editText != null;
-        setupSearchView(editText);
+    }
 
-        setupMap();
+    private void setupMap() {
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.city_map);
+        mapFragment.getMapAsync(this);
     }
 
     private void setupViewModel() {
@@ -95,12 +96,28 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
             showError(getString(R.string.error_loading_cities));
             e.printStackTrace();
         }
+        viewModel.dataReady.observe(this, aBoolean -> initListAndSearchView());
+    }
+
+    public void showError(CharSequence message) {
+        Snackbar.make(coordinator, message, Snackbar.LENGTH_LONG);
+    }
+
+    private void initListAndSearchView() {
+        RecyclerView recyclerView = findViewById(R.id.city_list);
+        assert recyclerView != null;
+        setupRecyclerView(recyclerView);
+
+        EditText editText = findViewById(R.id.search_view);
+        assert editText != null;
+        setupSearchView(editText);
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
         final CityPagedAdapter cityAdapter = new CityPagedAdapter(viewModel);
         viewModel.cityList.observe(this, pagedList -> {
             showEmptyListMessage(pagedList == null);
+            hideProgressBar();
             cityAdapter.setList(pagedList);
         });
         viewModel.selectedCity.observe(this, city -> {
@@ -129,21 +146,15 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
         });
     }
 
-    private void setupMap() {
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.city_map);
-        mapFragment.getMapAsync(this);
-    }
-
-    public void showError(CharSequence message) {
-        Snackbar.make(coordinator, message, Snackbar.LENGTH_LONG);
-    }
-
     /**
      * call with true to show message indicating no data on the list, or false to show the list
      */
     public void showEmptyListMessage(boolean shouldShow) {
         listViewWrapper.setDisplayedChild(shouldShow ? 1 : 0);
+    }
+
+    private void hideProgressBar() {
+        findViewById(R.id.progressBar).setVisibility(View.GONE);
     }
 
     private void updateUiWithNewCity(@NonNull City city) {

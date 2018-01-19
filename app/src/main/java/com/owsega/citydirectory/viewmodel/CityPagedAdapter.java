@@ -1,4 +1,4 @@
-package com.owsega.citydirectory.provider;
+package com.owsega.citydirectory.viewmodel;
 
 import android.arch.paging.PagedListAdapter;
 import android.support.v7.widget.RecyclerView;
@@ -7,10 +7,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.google.gson.Gson;
 import com.owsega.citydirectory.R;
 import com.owsega.citydirectory.model.City;
-import com.owsega.citydirectory.provider.CityPagedAdapter.ViewHolder;
+import com.owsega.citydirectory.viewmodel.CityPagedAdapter.ViewHolder;
 
 /**
  * Adapter for cities list.
@@ -24,7 +23,6 @@ public class CityPagedAdapter extends PagedListAdapter<City, ViewHolder> {
             cityClickListener.onCityClicked((City) view.getTag());
         }
     };
-    private Gson gson = new Gson();
 
     public CityPagedAdapter(OnCityClickListener listener) {
         super(City.DIFF_CALLBACK);
