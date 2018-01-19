@@ -6,6 +6,7 @@ import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModel;
 import android.arch.paging.LivePagedListBuilder;
 import android.arch.paging.PagedList;
+import android.os.AsyncTask;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -37,7 +38,7 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
     public MutableLiveData<Boolean> emptyData;
     private boolean dataIsReady;
     private Executor executor;
-    private ConcurrentSkipListMap<String, City> fullData;
+    private ConcurrentNavigableMap<String, City> fullData;
 
     public CityListViewModel() {
         dataIsReady = false;
@@ -59,38 +60,38 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
         emptyData = new MutableLiveData<>();
 
         executor = Executors.newFixedThreadPool(5);
-//        Executors.newSingleThreadExecutor().execute(() -> getAllCities(jsonReader));
         getAllCities(jsonReader);
     }
 
-    private List<City> getAllCities(JsonReader reader) {
-        Log.d(TAG, "starting getAllcities");
-        long time = System.currentTimeMillis();
-        Type type = new TypeToken<List<City>>() {
-        }.getType();
-        List<City> cities = new Gson().fromJson(reader, type);
-        time = System.currentTimeMillis() - time;
-        Log.d(TAG, "time to parse json " + time);
-        ConcurrentSkipListMap<String, City> citiesMap = new ConcurrentSkipListMap<>();
-        for (City city : cities) {
-            citiesMap.put(city.getKey(), city);
-        }
-        initDataStructures(citiesMap);
-        try {
-            reader.close();
-        } catch (IOException ignored) {
-        }
-        return cities;
+    private void getAllCities(JsonReader reader) {
+        AsyncTask.execute(() -> {
+            Log.d(TAG, "starting getAllcities");
+            long time = System.currentTimeMillis();
+            Type type = new TypeToken<List<City>>() {
+            }.getType();
+            List<City> cities = new Gson().fromJson(reader, type);
+            time = System.currentTimeMillis() - time;
+            Log.d(TAG, "time to parse json " + time);
+            ConcurrentNavigableMap<String, City> citiesMap = new ConcurrentSkipListMap<>();
+            for (City city : cities) {
+                citiesMap.put(city.getKey(), city);
+            }
+            initDataStructures(citiesMap);
+            try {
+                reader.close();
+            } catch (IOException ignored) {
+            }
+        });
     }
 
-    private void initDataStructures(ConcurrentSkipListMap cities) {
+    private void initDataStructures(ConcurrentNavigableMap<String, City> cities) {
         fullData = cities;
         dataIsReady = true;
         dataReady.postValue(true);
         setList(fullData);
     }
 
-    private void setList(ConcurrentSkipListMap<String, City> cities) {
+    private void setList(ConcurrentNavigableMap<String, City> cities) {
         CityDataSourceFactory dataSourceFactory = new CityDataSourceFactory(cities);
 
         int pageSize = cities.size() >= 30 ? 30 : cities.size();
@@ -122,12 +123,14 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
 
     private void filterWithMap(String text) {
         String lowerBound = fullData.ceilingKey(text);
+        Log.d(TAG, "full Data size " + fullData.size());
 
         int len = text.length() - 1;
         String higherBound = text.substring(0, len) + (char) (text.charAt(len) + 1);
         higherBound = fullData.ceilingKey(higherBound);
 
         if (lowerBound == null || higherBound == null) {
+            Log.d(TAG, "null bound");
             emptyData.postValue(true);
         } else {
             try {
@@ -137,8 +140,10 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
                         higherBound,
                         false);
                 if (newMap.size() < 1) emptyData.postValue(true);
-                else setList(new ConcurrentSkipListMap<>(newMap));
+                else setList(newMap);
             } catch (Exception e) {
+                Log.d(TAG, "error creating filtered map " + e.getMessage());
+                e.printStackTrace();
                 emptyData.postValue(true);
             }
         }

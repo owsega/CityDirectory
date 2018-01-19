@@ -4,13 +4,13 @@ import android.arch.paging.DataSource;
 
 import com.owsega.citydirectory.model.City;
 
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentNavigableMap;
 
 public class CityDataSourceFactory implements DataSource.Factory<String, City> {
 
-    private ConcurrentSkipListMap<String, City> data;
+    private ConcurrentNavigableMap<String, City> data;
 
-    CityDataSourceFactory(ConcurrentSkipListMap<String, City> cities) {
+    CityDataSourceFactory(ConcurrentNavigableMap<String, City> cities) {
         data = cities;
     }
 

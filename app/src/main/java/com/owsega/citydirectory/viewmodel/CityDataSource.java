@@ -9,14 +9,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentNavigableMap;
-import java.util.concurrent.ConcurrentSkipListMap;
 
 public class CityDataSource extends ItemKeyedDataSource<String, City> {
 
-    private ConcurrentSkipListMap<String, City> cityMap;
+    private ConcurrentNavigableMap<String, City> cityMap;
     private int count;
 
-    public CityDataSource(ConcurrentSkipListMap<String, City> data) {
+    CityDataSource(ConcurrentNavigableMap<String, City> data) {
         this.count = data.size();
         this.cityMap = data;
     }
@@ -71,13 +70,6 @@ public class CityDataSource extends ItemKeyedDataSource<String, City> {
     public String getKey(@NonNull City item) {
         // warning: this assumes the key for any city is its toString equivalent
         return item.toString();
-    }
-
-    public ConcurrentNavigableMap<String, City> filterWith(String text) {
-        String lowerBound = cityMap.floorKey(text);
-        int len = text.length() - 1;
-        String higherBound = text.substring(0, len) + (char) (text.charAt(len) + 1);
-        return cityMap.subMap(lowerBound, higherBound);
     }
 }
     
