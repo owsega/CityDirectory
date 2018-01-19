@@ -21,6 +21,7 @@
             android:layout_marginRight="16dp"
             android:hint="@string/search"/>
 
+
         <android.support.v7.widget.RecyclerView
             android:id="@+id/city_list"
             android:name="com.owsega.citydirectory.CityListFragment"

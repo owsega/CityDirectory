@@ -3,6 +3,7 @@ package com.owsega.citydirectory.view;
 import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -47,6 +48,7 @@ public class CityListActivity extends AppCompatActivity
      * When the activity is not in single-pane mode, this view will not be null
      */
     private ViewSwitcher viewSwitcher;
+    private CoordinatorLayout coordinator;
     private GoogleMap cityMap;
 
     @Override
@@ -57,6 +59,8 @@ public class CityListActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setTitle(getTitle());
+
+        coordinator = findViewById(R.id.coordinator);
 
         if (findViewById(R.id.view_switcher) != null) {
             // The view will be present only in the single-pane mode.
@@ -134,7 +138,7 @@ public class CityListActivity extends AppCompatActivity
     }
 
     public void showError(CharSequence message) {
-        Snackbar.make(viewSwitcher, message, Snackbar.LENGTH_LONG);
+        Snackbar.make(coordinator, message, Snackbar.LENGTH_LONG);
     }
 
     private void updateUiWithNewCity(@NonNull City city) {
