@@ -18,6 +18,7 @@ import com.owsega.citydirectory.model.City;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -37,7 +38,7 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
     public MutableLiveData<Boolean> emptyData;
     private boolean dataIsReady;
     private Executor executor;
-    private CitiesTrie trie;
+    //  private CitiesTrie trie;
     private ConcurrentSkipListMap<String, City> fullData;
 
     public CityListViewModel() {
@@ -69,7 +70,7 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
         for (City city : cities) {
             fullData.put(city.toString().toLowerCase(), city);
         }
-        trie = passIntoTrie(cities);
+        //trie = passIntoTrie(cities);
         dataIsReady = true;
         dataReady.postValue(true);
 
@@ -90,19 +91,6 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
         } catch (IOException ignored) {
         }
         return cities;
-    }
-
-    private CitiesTrie passIntoTrie(List<City> cities) {
-        Log.d(TAG, "starting passIntoTrie");
-        CitiesTrie trie = new CitiesTrie();
-
-        long time = System.currentTimeMillis();
-        for (City city : cities) {
-            trie.add(city);
-        }
-        time = System.currentTimeMillis() - time;
-        Log.d(TAG, "Time to build Trie " + time);
-        return trie;
     }
 
     private void setList(ConcurrentSkipListMap<String, City> cities) {
@@ -127,12 +115,54 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
         });
     }
 
+    private CitiesTrie passIntoTrie(List<City> cities) {
+        Log.d(TAG, "starting passIntoTrie");
+        CitiesTrie trie = new CitiesTrie();
+
+        long time = System.currentTimeMillis();
+        for (City city : cities) {
+            trie.add(city);
+        }
+        time = System.currentTimeMillis() - time;
+        Log.d(TAG, "Time to build Trie " + time);
+        return trie;
+    }
+
     public void filterCities(String text) {
         if (text.isEmpty()) {
             setList(fullData);
+        } else {
+            filterWithMap(text);
+//            filterWithTrie(text);
         }
+    }
 
-        int count = trie.find(text);
+    private void filterWithMap(String text) {
+        String lowerBound = fullData.ceilingKey(text);
+
+        int len = text.length() - 1;
+        String higherBound = text.substring(0, len) + (char) (text.charAt(len) + 1);
+        higherBound = fullData.ceilingKey(higherBound);
+
+        if (lowerBound == null || higherBound == null) {
+            emptyData.postValue(true);
+        } else {
+            try {
+                ConcurrentNavigableMap<String, City> newMap = fullData.subMap(
+                        lowerBound,
+                        lowerBound.startsWith(text),
+                        higherBound,
+                        false);
+                if (newMap.size() < 1) emptyData.postValue(true);
+                else setList(new ConcurrentSkipListMap<>(newMap));
+            } catch (Exception e) {
+                emptyData.postValue(true);
+            }
+        }
+    }
+
+    private void filterWithTrie(String text) {
+        int count = 10;//trie.find(text);
         String firstKey = fullData.ceilingKey(text);
         if (count > 0 && firstKey != null && firstKey.startsWith(text)) {
             ConcurrentSkipListMap<String, City> filtered = new ConcurrentSkipListMap<>();
@@ -147,39 +177,6 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
             emptyData.postValue(true);
         }
     }
-/*
-
-    ConcurrentSkipListMap<String, City> filterWith(String text) {
-        ConcurrentSkipListMap<String, City> newMap;
-
-        Log.e("seyi", "filtering with " + text);
-        String lowerBound = cityMap.floorKey(text);
-        Log.e("seyi", "lowerBound " + lowerBound);
-
-        int len = text.length() - 1;
-        String higherBound = text.substring(0, len) + (char) (text.charAt(len) + 1);
-        Log.e("seyi", "higherBoundText " + higherBound);
-        higherBound = cityMap.ceilingKey(higherBound);
-        Log.e("seyi", "higherBound " + higherBound);
-
-        if (lowerBound == null || higherBound == null) {
-            // this can occur when the filter is not a suitable filter
-            // todo bad design ... loadInitial will fail for new data source
-            // todo return empty map
-//            return new ConcurrentSkipListMap<>();
-            String first = cityMap.firstKey();
-            String second = cityMap.higherKey(first);
-            newMap = new ConcurrentSkipListMap<>(cityMap.subMap(first, second));
-        } else {
-            // todo handle scenarios where lists contain aaa, ccc and b is used to filter (empty results too)
-            // todo catch inconsistent bounds exception too. and handle empty
-            newMap = new ConcurrentSkipListMap<>(
-                    cityMap.subMap(lowerBound, lowerBound.startsWith(text), higherBound, false));
-        }
-        Log.e("seyi", "newMap size " + newMap.size());
-        return newMap;
-    }
-*/
 
     @Override
     public void onCityClicked(City city) {
