@@ -2,18 +2,17 @@ package com.owsega.citydirectory.viewmodel;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
-import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModel;
 import android.arch.paging.LivePagedListBuilder;
 import android.arch.paging.PagedList;
 import android.os.AsyncTask;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.owsega.citydirectory.model.City;
+import com.owsega.citydirectory.viewmodel.CityPagedAdapter.OnCityClickListener;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -26,7 +25,7 @@ import java.util.concurrent.Executors;
 /**
  * ViewModel for CityListActivity. Provides data to be shown in the activity
  */
-public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnCityClickListener {
+public class CityListViewModel extends ViewModel implements OnCityClickListener {
 
     public static final String CITIES_FILE = "cities.json";
     //    public static final String CITIES_FILE = "smallcities.json";
@@ -39,10 +38,13 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
     private boolean dataIsReady;
     private Executor executor;
     private ConcurrentNavigableMap<String, City> fullData;
+    private CityDataSourceFactory dataSourceFactory;
 
     public CityListViewModel() {
         dataIsReady = false;
         dataReady = new MutableLiveData<>();
+        selectedCity = new MutableLiveData<>();
+        emptyData = new MutableLiveData<>();
     }
 
     public void init(final JsonReader jsonReader) {
@@ -56,8 +58,6 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
         }
 
         cityList = new MutableLiveData<>();
-        selectedCity = new MutableLiveData<>();
-        emptyData = new MutableLiveData<>();
 
         executor = Executors.newFixedThreadPool(5);
         getAllCities(jsonReader);
@@ -88,29 +88,26 @@ public class CityListViewModel extends ViewModel implements CityPagedAdapter.OnC
         fullData = cities;
         dataIsReady = true;
         dataReady.postValue(true);
+        dataSourceFactory = new CityDataSourceFactory(cities);
+        initList();
         setList(fullData);
     }
 
-    private void setList(ConcurrentNavigableMap<String, City> cities) {
-        CityDataSourceFactory dataSourceFactory = new CityDataSourceFactory(cities);
-
-        int pageSize = cities.size() >= 30 ? 30 : cities.size();
+    private void initList() {
         PagedList.Config pagedListConfig =
                 new PagedList.Config.Builder()
                         .setEnablePlaceholders(false)
-                        .setPageSize(pageSize)
+                        .setPageSize(30)
                         .build();
+        LiveData<PagedList<City>> liveData =
+                new LivePagedListBuilder<>(dataSourceFactory, pagedListConfig)
+                        .setBackgroundThreadExecutor(executor)
+                        .build();
+        liveData.observeForever(newCities -> cityList.postValue(newCities));
+    }
 
-        final LiveData<PagedList<City>> liveData = new LivePagedListBuilder<>(dataSourceFactory, pagedListConfig)
-                .setBackgroundThreadExecutor(executor)
-                .build();
-        liveData.observeForever(new Observer<PagedList<City>>() {
-            @Override
-            public void onChanged(@Nullable PagedList<City> cities1) {
-                cityList.postValue(cities1);
-                liveData.removeObserver(this);
-            }
-        });
+    private void setList(ConcurrentNavigableMap<String, City> cities) {
+        dataSourceFactory.invalidateData(cities);
     }
 
     public void filterCities(String text) {
