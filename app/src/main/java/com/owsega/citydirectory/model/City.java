@@ -41,10 +41,18 @@ public class City implements Comparable<City> {
     }
 
     /**
-     * @return a key suitable to use as key to this city in a Map
+     * @return a String suitable to use as key to this city in a Map
      */
     public String getKey() {
-        return this.toString().toLowerCase();
+        return toKey(this.toString());
+    }
+
+    /**
+     * @return a String suitable to use as key in the app. Currently this just returns
+     * the lowerCase representation of the given string
+     */
+    public static String toKey(String string) {
+        return string.toLowerCase();
     }
 
     public class Coord {

@@ -141,7 +141,7 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
 
             @Override
             public void afterTextChanged(Editable s) {
-                viewModel.filterCities(s.toString().trim());
+                viewModel.filterCities(City.toKey(s.toString().trim()));
             }
         });
     }
