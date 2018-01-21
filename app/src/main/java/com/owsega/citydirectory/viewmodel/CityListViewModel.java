@@ -28,6 +28,7 @@ public class CityListViewModel extends ViewModel implements OnCityClickListener 
     public static final String CITIES_FILE = "cities.json";
     //    public static final String CITIES_FILE = "smallcities.json";
     private static final String TAG = "CityListViewModel";
+    private static final int PAGING_SIZE = 30;
 
     public MutableLiveData<PagedList<City>> cityList;
     public MutableLiveData<City> selectedCity;
@@ -45,9 +46,9 @@ public class CityListViewModel extends ViewModel implements OnCityClickListener 
         emptyData = new MutableLiveData<>();
     }
 
-    public void init(final JsonReader jsonReader) {
+    public void init(final JsonReader jsonReader, boolean runInBackground) {
         if (dataIsReady) dataReady.postValue(true);
-        if (executor != null && cityList != null) {
+        if (this.executor != null && cityList != null) {
             try {
                 jsonReader.close();
             } catch (IOException ignored) {
@@ -56,31 +57,30 @@ public class CityListViewModel extends ViewModel implements OnCityClickListener 
         }
 
         cityList = new MutableLiveData<>();
+        if (runInBackground) this.executor = Executors.newFixedThreadPool(5);
 
-        executor = Executors.newFixedThreadPool(5);
-        getAllCities(jsonReader);
+        if (runInBackground)
+            Executors.newSingleThreadExecutor().execute(() -> getAllCities(jsonReader));
+        else getAllCities(jsonReader);
     }
 
     private void getAllCities(JsonReader reader) {
-        Executors.newSingleThreadExecutor().execute(() -> {
-//        AsyncTask.execute(() -> {
-            System.out.println(TAG + " starting getAllcities");
-            long time = System.currentTimeMillis();
-            Type type = new TypeToken<List<City>>() {
-            }.getType();
-            List<City> cities = new Gson().fromJson(reader, type);
-            time = System.currentTimeMillis() - time;
-            System.out.println(TAG + " time to parse json " + time);
-            ConcurrentNavigableMap<String, City> citiesMap = new ConcurrentSkipListMap<>();
-            for (City city : cities) {
-                citiesMap.put(city.getKey(), city);
-            }
-            initDataStructures(citiesMap);
-            try {
-                reader.close();
-            } catch (IOException ignored) {
-            }
-        });
+        System.out.println(TAG + " starting getAllcities");
+        long time = System.currentTimeMillis();
+        Type type = new TypeToken<List<City>>() {
+        }.getType();
+        List<City> cities = new Gson().fromJson(reader, type);
+        time = System.currentTimeMillis() - time;
+        System.out.println(TAG + " time to parse json " + time);
+        ConcurrentNavigableMap<String, City> citiesMap = new ConcurrentSkipListMap<>();
+        for (City city : cities) {
+            citiesMap.put(city.getKey(), city);
+        }
+        initDataStructures(citiesMap);
+        try {
+            reader.close();
+        } catch (IOException ignored) {
+        }
     }
 
     private void initDataStructures(ConcurrentNavigableMap<String, City> cities) {
@@ -96,12 +96,13 @@ public class CityListViewModel extends ViewModel implements OnCityClickListener 
         PagedList.Config pagedListConfig =
                 new PagedList.Config.Builder()
                         .setEnablePlaceholders(false)
-                        .setPageSize(30)
+                        .setPageSize(PAGING_SIZE)
                         .build();
-        LiveData<PagedList<City>> liveData =
-                new LivePagedListBuilder<>(dataSourceFactory, pagedListConfig)
-                        .setBackgroundThreadExecutor(executor)
-                        .build();
+        LivePagedListBuilder<String, City> builder =
+                new LivePagedListBuilder<>(dataSourceFactory, pagedListConfig);
+        System.out.println("Initializing listbuilder with null executor " + (executor == null));
+        if (executor != null) builder.setBackgroundThreadExecutor(executor);
+        LiveData<PagedList<City>> liveData = builder.build();
         liveData.observeForever(newCities -> cityList.postValue(newCities));
     }
 
@@ -110,6 +111,7 @@ public class CityListViewModel extends ViewModel implements OnCityClickListener 
     }
 
     public void filterCities(String text) {
+        text = City.toKey(text.trim());
         if (text.isEmpty()) {
             setList(fullData);
         } else {

@@ -91,7 +91,7 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
         try {
             InputStream in = getApplicationContext().getAssets().open(CITIES_FILE);
             JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
-            viewModel.init(reader);
+            viewModel.init(reader, true);
         } catch (Exception e) {
             showError(getString(R.string.error_loading_cities));
             e.printStackTrace();
@@ -141,7 +141,7 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
 
             @Override
             public void afterTextChanged(Editable s) {
-                viewModel.filterCities(City.toKey(s.toString().trim()));
+                viewModel.filterCities(s.toString());
             }
         });
     }
