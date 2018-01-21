@@ -116,13 +116,15 @@ public class CityListViewModel extends ViewModel implements OnCityClickListener 
 
     private void setList(ConcurrentNavigableMap<String, City> cities) {
         dataSourceFactory.invalidateData(cities);
+        emptyData.postValue(false);
     }
 
     public void filterCities(String text) {
+        text = text.trim();
         if (text.isEmpty()) {
             setList(fullData);
         } else {
-            filterWithMap(City.toKey(text.trim()));
+            filterWithMap(City.toKey(text));
         }
     }
 
