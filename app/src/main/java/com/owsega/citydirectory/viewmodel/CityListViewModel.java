@@ -25,30 +25,40 @@ import java.util.concurrent.Executors;
  */
 public class CityListViewModel extends ViewModel implements OnCityClickListener {
 
-    public static final String CITIES_FILE = "cities.json";
-    //    public static final String CITIES_FILE = "smallcities.json";
+    //    public static final String CITIES_FILE = "cities.json";
+    public static final String CITIES_FILE = "smallcities.json";
     private static final String TAG = "CityListViewModel";
     private static final int PAGING_SIZE = 30;
 
-    public MutableLiveData<PagedList<City>> cityList;
+    public LiveData<PagedList<City>> cityList;
     public MutableLiveData<City> selectedCity;
+    /**
+     * monitors and posts when the data has been loaded and list is ready for showing
+     */
     public MutableLiveData<Boolean> dataReady;
     public MutableLiveData<Boolean> emptyData;
-    private boolean dataIsReady;
+    /**
+     * monitors if the data preparation has started.
+     * This helps ensure we don't start the data prep process
+     * (in {@link #getAllCities(JsonReader)}) all over again
+     * in a new background thread if {@link #init(JsonReader, boolean)}
+     * is called again before the initial data prep is completed.
+     */
+    private boolean dataPrepStarted;
     private Executor executor;
     private ConcurrentNavigableMap<String, City> fullData;
     private CityDataSourceFactory dataSourceFactory;
 
     public CityListViewModel() {
-        dataIsReady = false;
+        dataPrepStarted = false;
         dataReady = new MutableLiveData<>();
         selectedCity = new MutableLiveData<>();
         emptyData = new MutableLiveData<>();
     }
 
-    public void init(final JsonReader jsonReader, boolean runInBackground) {
-        if (dataIsReady) dataReady.postValue(true);
-        if (this.executor != null && cityList != null) {
+    public void init(final JsonReader jsonReader, boolean useBackgroundThreads) {
+        if (dataPrepStarted) {
+            dataReady.postValue(dataReady.getValue());
             try {
                 jsonReader.close();
             } catch (IOException ignored) {
@@ -56,15 +66,16 @@ public class CityListViewModel extends ViewModel implements OnCityClickListener 
             return;
         }
 
-        cityList = new MutableLiveData<>();
-        if (runInBackground) this.executor = Executors.newFixedThreadPool(5);
-
-        if (runInBackground)
+        if (useBackgroundThreads) {
+            this.executor = Executors.newFixedThreadPool(5);
             Executors.newSingleThreadExecutor().execute(() -> getAllCities(jsonReader));
-        else getAllCities(jsonReader);
+        } else {
+            getAllCities(jsonReader);
+        }
     }
 
     private void getAllCities(JsonReader reader) {
+        dataPrepStarted = true;
         System.out.println(TAG + " starting getAllcities");
         long time = System.currentTimeMillis();
         Type type = new TypeToken<List<City>>() {
@@ -85,11 +96,10 @@ public class CityListViewModel extends ViewModel implements OnCityClickListener 
 
     private void initDataStructures(ConcurrentNavigableMap<String, City> cities) {
         fullData = cities;
-        dataIsReady = true;
-        dataReady.postValue(true);
         dataSourceFactory = new CityDataSourceFactory(cities);
         initList();
         setList(fullData);
+        dataReady.postValue(true);
     }
 
     private void initList() {
@@ -100,10 +110,8 @@ public class CityListViewModel extends ViewModel implements OnCityClickListener 
                         .build();
         LivePagedListBuilder<String, City> builder =
                 new LivePagedListBuilder<>(dataSourceFactory, pagedListConfig);
-        System.out.println("Initializing listbuilder with null executor " + (executor == null));
         if (executor != null) builder.setBackgroundThreadExecutor(executor);
-        LiveData<PagedList<City>> liveData = builder.build();
-        liveData.observeForever(newCities -> cityList.postValue(newCities));
+        cityList = builder.build();
     }
 
     private void setList(ConcurrentNavigableMap<String, City> cities) {
@@ -111,11 +119,10 @@ public class CityListViewModel extends ViewModel implements OnCityClickListener 
     }
 
     public void filterCities(String text) {
-        text = City.toKey(text.trim());
         if (text.isEmpty()) {
             setList(fullData);
         } else {
-            filterWithMap(text);
+            filterWithMap(City.toKey(text.trim()));
         }
     }
 
