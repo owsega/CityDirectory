@@ -19,8 +19,8 @@ import java.io.InputStreamReader;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentCaptor.forClass;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 
 public class CityListViewModelTest {
@@ -73,20 +73,29 @@ public class CityListViewModelTest {
     }
 
     @Test
-    public void testFiltering() {
+    public void testFiltering() throws InterruptedException {
         ArgumentCaptor<PagedList<City>> captor = forClass(PagedList.class);
-        Observer<PagedList<City>> observer = mock(Observer.class);
+        Observer<PagedList<City>> listObserver = mock(Observer.class);
+        Observer<Boolean> emptyDataObserver = mock(Observer.class);
         viewModel.init(jsonReader, false);
-        viewModel.cityList.observeForever(observer);
-        verify(observer).onChanged(captor.capture());
+        viewModel.cityList.observeForever(listObserver);
+        viewModel.emptyData.observeForever(emptyDataObserver);
 
-        // test
-//        viewModel.filterCities("Novinki");
-        reset(observer);
-        viewModel.filterCities("ab");
-        verify(observer).onChanged(captor.capture());
-        System.out.println(captor.getValue().size());
-        assertThat(TEST_JSON_SIZE, CoreMatchers.equalTo(captor.getValue().size()));
+        // test with full key
+        viewModel.filterCities("Novinki");
+        verify(emptyDataObserver, atLeastOnce()).onChanged(false);
+        verify(listObserver, atLeastOnce()).onChanged(captor.capture());
+        assertThat(1, CoreMatchers.equalTo(captor.getValue().size()));
+
+        //   test no matches
+        viewModel.filterCities("zzzkyt");
+        verify(emptyDataObserver, atLeastOnce()).onChanged(true);
+
+        // test prefix and trimming
+        viewModel.filterCities(" g ");
+        verify(emptyDataObserver, atLeastOnce()).onChanged(false);
+        verify(listObserver, atLeastOnce()).onChanged(captor.capture());
+        assertThat(4, CoreMatchers.equalTo(captor.getValue().size()));
     }
 
 }
