@@ -1,4 +1,4 @@
-package com.owsega.citydirectory.view;
+package com.owsega.citydirectory;
 
 import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
@@ -21,7 +21,6 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.stream.JsonReader;
-import com.owsega.citydirectory.R;
 import com.owsega.citydirectory.model.City;
 import com.owsega.citydirectory.viewmodel.CityAdapter;
 import com.owsega.citydirectory.viewmodel.CityListViewModel;

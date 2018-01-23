@@ -8,7 +8,7 @@
     android:divider="?android:attr/dividerHorizontal"
     android:orientation="horizontal"
     android:showDividers="middle"
-    tools:context="com.owsega.citydirectory.view.CityListActivity">
+    tools:context="com.owsega.citydirectory.CityListActivity">
 
     <!--
     This layout is a two-pane layout for the Cities
@@ -40,7 +40,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 app:layoutManager="LinearLayoutManager"
-                tools:context="com.owsega.citydirectory.view.CityListActivity"
+                tools:context="com.owsega.citydirectory.CityListActivity"
                 tools:listitem="@layout/city_list_content"/>
 
             <TextView
