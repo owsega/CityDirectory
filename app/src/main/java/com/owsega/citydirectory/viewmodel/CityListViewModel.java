@@ -50,7 +50,7 @@ public class CityListViewModel extends ViewModel implements OnCityClickListener 
     private ConcurrentNavigableMap<String, City> fullData;
     private CityDataSourceFactory dataSourceFactory;
 
-    CityListViewModel() {
+    public CityListViewModel() {
         dataPrepStarted = false;
         dataReady = new MutableLiveData<>();
         selectedCity = new MutableLiveData<>();

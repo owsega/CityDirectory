@@ -58,7 +58,7 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
             throw new IndexOutOfBoundsException(
                     "Item count is zero, getItem() call is invalid");
         } else {
-            //todo currentList.loadAround(index);
+            //todo loadAround(index);
             return currentList.get(position);
         }
     }

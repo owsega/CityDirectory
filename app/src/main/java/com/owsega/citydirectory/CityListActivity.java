@@ -1,6 +1,5 @@
 package com.owsega.citydirectory;
 
-import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
@@ -86,7 +85,7 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
     }
 
     private void setupViewModel() {
-        viewModel = ViewModelProviders.of(this).get(CityListViewModel.class);
+        viewModel = ((CityDirectory) getApplication()).viewModel;
         try {
             InputStream in = getApplicationContext().getAssets().open(CITIES_FILE);
             JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));

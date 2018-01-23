@@ -8,6 +8,7 @@ import java.util.List;
 
 /**
  * {@link android.support.v7.util.DiffUtil.Callback} for adapters using {@link City objects}
+ * It is used to inform the view the changes needed in order to load new data to the UI
  */
 public class CityDiffCallback extends DiffUtil.Callback {
 
