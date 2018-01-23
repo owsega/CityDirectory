@@ -1,6 +1,5 @@
 package com.owsega.citydirectory.viewmodel;
 
-import android.arch.paging.PagedList;
 import android.support.annotation.Nullable;
 import android.support.v7.util.DiffUtil.DiffResult;
 import android.support.v7.widget.RecyclerView;
@@ -77,7 +76,7 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
      *
      * @param newList The new list to be displayed.
      */
-    public void setList(PagedList<City> newList) {
+    public void setList(List<City> newList) {
         DiffResult diffResult = calculateDiff(new CityDiffCallback(this.currentList, newList));
         this.currentList = newList;
         diffResult.dispatchUpdatesTo(this);
