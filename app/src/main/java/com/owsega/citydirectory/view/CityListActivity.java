@@ -23,8 +23,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.stream.JsonReader;
 import com.owsega.citydirectory.R;
 import com.owsega.citydirectory.model.City;
+import com.owsega.citydirectory.viewmodel.CityAdapter;
 import com.owsega.citydirectory.viewmodel.CityListViewModel;
-import com.owsega.citydirectory.viewmodel.CityPagedAdapter;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -114,7 +114,7 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
-        final CityPagedAdapter cityAdapter = new CityPagedAdapter(viewModel);
+        final CityAdapter cityAdapter = new CityAdapter(viewModel);
         viewModel.cityList.observe(this, pagedList -> {
             showEmptyListMessage(pagedList == null);
             hideProgressBar();

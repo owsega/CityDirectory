@@ -10,7 +10,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.owsega.citydirectory.model.City;
-import com.owsega.citydirectory.viewmodel.CityPagedAdapter.OnCityClickListener;
+import com.owsega.citydirectory.viewmodel.CityAdapter.OnCityClickListener;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
 
 /**
  * ViewModel for CityListActivity. Provides data to be shown in the activity
@@ -49,7 +50,7 @@ public class CityListViewModel extends ViewModel implements OnCityClickListener 
     private ConcurrentNavigableMap<String, City> fullData;
     private CityDataSourceFactory dataSourceFactory;
 
-    public CityListViewModel() {
+    CityListViewModel() {
         dataPrepStarted = false;
         dataReady = new MutableLiveData<>();
         selectedCity = new MutableLiveData<>();
