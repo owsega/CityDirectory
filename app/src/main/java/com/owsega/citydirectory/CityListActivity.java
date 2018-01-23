@@ -9,6 +9,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ViewSwitcher;
@@ -21,12 +22,12 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.stream.JsonReader;
 import com.owsega.citydirectory.model.City;
 import com.owsega.citydirectory.viewmodel.CityAdapter;
+import com.owsega.citydirectory.viewmodel.CityAdapterHelper;
 import com.owsega.citydirectory.viewmodel.CityListViewModel;
 import com.owsega.citydirectory.viewmodel.CityListViewModel.UpdateListener;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.List;
 
 import static com.owsega.citydirectory.viewmodel.CityListViewModel.CITIES_FILE;
 
@@ -42,6 +43,7 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
 
     CityListViewModel viewModel;
     CityAdapter cityAdapter;
+    CityAdapterHelper cityAdapterHelper;
 
     /**
      * When the activity is not in single-pane mode, this view will not be null
@@ -75,12 +77,15 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
 
         setupMap();
         setupViewModel();
+        cityAdapterHelper = new CityAdapterHelper(viewModel);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         if (viewModel != null) viewModel.removeUpdateListener(this);
+        cityAdapterHelper = null;
+        cityAdapter = null;
     }
 
     private void setupMap() {
@@ -135,11 +140,13 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
      */
     @Override
     public void onEmptyData(boolean isEmpty) {
+        Log.e("seyi", "onEmptyData " + isEmpty);
         listViewWrapper.setDisplayedChild(isEmpty ? 1 : 0);
     }
 
     @Override
     public void onCitySelected(City city) {
+        Log.e("seyi", "onCitySelected " + city);
         if (cityMap != null) {
             cityMap.animateCamera(
                     CameraUpdateFactory.newLatLng(
@@ -154,10 +161,11 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
 
     @Override
     public void onDataReady(boolean dataReady) {
+        Log.e("seyi", "dataReady " + dataReady);
         if (dataReady) {
             RecyclerView recyclerView = findViewById(R.id.city_list);
             assert recyclerView != null;
-            cityAdapter = new CityAdapter(viewModel);
+            cityAdapter = new CityAdapter(viewModel, cityAdapterHelper);
             recyclerView.setAdapter(cityAdapter);
 
             EditText editText = findViewById(R.id.search_view);
@@ -176,14 +184,10 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
                     viewModel.filterCities(s.toString());
                 }
             });
-        }
-    }
 
-    @Override
-    public void onCityListUpdated(List<City> cities) {
-        CityListActivity.this.onEmptyData(cities == null);
-        CityListActivity.this.hideProgressBar();
-        cityAdapter.setList(cities);
+            hideProgressBar();
+            cityAdapterHelper.notifyDataReady();
+        }
     }
 
     private void hideProgressBar() {

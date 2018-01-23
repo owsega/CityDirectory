@@ -1,6 +1,7 @@
 package com.owsega.citydirectory.viewmodel;
 
 import android.support.annotation.Nullable;
+import android.support.v7.util.DiffUtil;
 import android.support.v7.util.DiffUtil.DiffResult;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -13,8 +14,6 @@ import com.owsega.citydirectory.model.City;
 import com.owsega.citydirectory.model.CityDiffCallback;
 
 import java.util.List;
-
-import static android.support.v7.util.DiffUtil.calculateDiff;
 
 /**
  * Adapter a list of for City objects
@@ -30,9 +29,12 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
     };
 
     private List<City> currentList;
+    private CityAdapterHelper helper;
 
-    public CityAdapter(OnCityClickListener listener) {
+    public CityAdapter(CityListViewModel listener, CityAdapterHelper helper) {
         cityClickListener = listener;
+        this.helper = helper;
+        this.helper.setAdapter(this);
     }
 
     @Override
@@ -55,10 +57,9 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
     @Nullable
     City getItem(int position) {
         if (currentList == null) {
-            throw new IndexOutOfBoundsException(
-                    "Item count is zero, getItem() call is invalid");
+            throw new IndexOutOfBoundsException("Item count is zero, getItem() call is invalid");
         } else {
-            //todo loadAround(index);
+            helper.loadAround(position);
             return currentList.get(position);
         }
     }
@@ -77,7 +78,7 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
      * @param newList The new list to be displayed.
      */
     public void setList(List<City> newList) {
-        DiffResult diffResult = calculateDiff(new CityDiffCallback(this.currentList, newList));
+        DiffResult diffResult = DiffUtil.calculateDiff(new CityDiffCallback(currentList, newList));
         this.currentList = newList;
         diffResult.dispatchUpdatesTo(this);
     }

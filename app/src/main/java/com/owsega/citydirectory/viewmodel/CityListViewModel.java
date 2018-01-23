@@ -1,9 +1,5 @@
 package com.owsega.citydirectory.viewmodel;
 
-import android.arch.lifecycle.LiveData;
-import android.arch.paging.LivePagedListBuilder;
-import android.arch.paging.PagedList;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
@@ -22,18 +18,18 @@ import java.util.concurrent.Executors;
 
 /**
  * ViewModel for CityListActivity. Provides data to be shown in the activity.
- *
+ * <p>
  * The cities data is stored in a json assets file, but is accessed with
  * Gson's {@link JsonReader} here. The data is preprocessed into {@link ConcurrentNavigableMap}
  * (specifically, the {@link ConcurrentSkipListMap} because we need the data structure to be
  * <ol>
- *     <li>Sorted. Since we are showing the cities alphabetically</li>
- *     <li>Mapped. Since we have to map the actual {@link City}s to a key that
- *     can be used to search. The key should be case insensitive.</li>
- *     <li>Concurrent. To allow for responsive UI, heavy data processing like
- *     data preprocessing and filtering should be done on background threads.</li>
- *     <li>Fast. Accessing elements of the data structure should be as fast
- *     as possible.</li>
+ * <li>Sorted. Since we are showing the cities alphabetically</li>
+ * <li>Mapped. Since we have to map the actual {@link City}s to a key that
+ * can be used to search. The key should be case insensitive.</li>
+ * <li>Concurrent. To allow for responsive UI, heavy data processing like
+ * data preprocessing and filtering should be done on background threads.</li>
+ * <li>Fast. Accessing elements of the data structure should be as fast
+ * as possible.</li>
  * </ol>
  */
 public class CityListViewModel implements OnCityClickListener {
@@ -41,7 +37,6 @@ public class CityListViewModel implements OnCityClickListener {
     //    public static final String CITIES_FILE = "cities.json";
     public static final String CITIES_FILE = "smallcities.json";
     private static final String TAG = "CityListViewModel";
-    private static final int PAGING_SIZE = 30;
 
     /**
      * holds listeners to updates from the ViewModel.
@@ -108,7 +103,7 @@ public class CityListViewModel implements OnCityClickListener {
         System.out.println(TAG + " time to parse json " + time);
         ConcurrentNavigableMap<String, City> citiesMap = new ConcurrentSkipListMap<>();
         for (City city : cities) {
-            citiesMap.put(city.getKey(), city);
+            citiesMap.put(city.getKey(), city); //todo could use multiple threads to do this
         }
         initDataStructures(citiesMap);
         try {
@@ -120,24 +115,9 @@ public class CityListViewModel implements OnCityClickListener {
     private void initDataStructures(ConcurrentNavigableMap<String, City> cities) {
         fullData = cities;
         dataSourceFactory = new CityDataSourceFactory(cities);
-        initList();
         setList(fullData);
-        for (UpdateListener l : updateListeners) l.onDataReady(true);
-    }
-
-    private void initList() {
-        PagedList.Config pagedListConfig =
-                new PagedList.Config.Builder()
-                        .setEnablePlaceholders(false)
-                        .setPageSize(PAGING_SIZE)
-                        .build();
-        LivePagedListBuilder<String, City> builder =
-                new LivePagedListBuilder<>(dataSourceFactory, pagedListConfig);
-        if (executor != null) builder.setBackgroundThreadExecutor(executor);
-        LiveData<PagedList<City>> pagedListLiveData = builder.build();
-        pagedListLiveData.observeForever(cities -> {
-            for (UpdateListener l : updateListeners) l.onCityListUpdated(cities);
-        });
+        dataReady = true;
+        for (UpdateListener l : updateListeners) l.onDataReady(dataReady);
     }
 
     private void setList(ConcurrentNavigableMap<String, City> cities) {
@@ -204,6 +184,10 @@ public class CityListViewModel implements OnCityClickListener {
         }
     }
 
+    public ConcurrentNavigableMap<String, City> getData() {
+        return fullData;
+    }
+
     /**
      * Listener for updates from the ViewModel.
      * This is to replace the LiveData (from android.arch) usage
@@ -214,8 +198,6 @@ public class CityListViewModel implements OnCityClickListener {
         void onCitySelected(City city);
 
         void onDataReady(boolean dataReady);
-
-        void onCityListUpdated(List<City> cities);
     }
 
 }
