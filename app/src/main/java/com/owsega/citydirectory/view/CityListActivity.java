@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
+import android.support.transition.TransitionManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -90,7 +91,7 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
         try {
             InputStream in = getApplicationContext().getAssets().open(CITIES_FILE);
             JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
-            viewModel.init(reader);
+            viewModel.init(reader, true);
         } catch (Exception e) {
             showError(getString(R.string.error_loading_cities));
             e.printStackTrace();
@@ -140,7 +141,7 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
 
             @Override
             public void afterTextChanged(Editable s) {
-                viewModel.filterCities(s.toString().trim());
+                viewModel.filterCities(s.toString());
             }
         });
     }
@@ -153,6 +154,8 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
     }
 
     private void hideProgressBar() {
+        TransitionManager.beginDelayedTransition(coordinator);
+        findViewById(R.id.frameLayout).setVisibility(View.VISIBLE);
         findViewById(R.id.progressBar).setVisibility(View.GONE);
     }
 

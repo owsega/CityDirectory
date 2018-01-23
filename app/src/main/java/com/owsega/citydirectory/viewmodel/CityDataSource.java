@@ -68,8 +68,7 @@ public class CityDataSource extends ItemKeyedDataSource<String, City> {
     @NonNull
     @Override
     public String getKey(@NonNull City item) {
-        // warning: this assumes the key for any city is its toString equivalent
-        return item.toString();
+        return item.getKey();
     }
 }
     
