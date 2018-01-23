@@ -1,30 +1,26 @@
 package com.owsega.citydirectory.viewmodel;
 
+
 import android.arch.core.executor.testing.InstantTaskExecutorRule;
-import android.arch.lifecycle.Observer;
-import android.arch.paging.PagedList;
 
 import com.google.gson.stream.JsonReader;
 import com.owsega.citydirectory.model.City;
 
-import org.hamcrest.CoreMatchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentCaptor.forClass;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 public class CityListViewModelTest {
 
@@ -36,120 +32,100 @@ public class CityListViewModelTest {
 
     private CityListViewModel viewModel;
     private JsonReader jsonReader;
+    private MockCityListViewModelUpdateListener updateListener;
 
     @Before
     public void setup() {
+        updateListener = new MockCityListViewModelUpdateListener();
         viewModel = new CityListViewModel();
 
         try {
             InputStream in = getClass().getClassLoader().getResourceAsStream(TEST_JSON);
             jsonReader = new JsonReader(new InputStreamReader(in, "UTF-8"));
+            viewModel.addUpdateListener(updateListener);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @Test
-    public void testNullMutableLiveDatas() {
-        assertThat(viewModel.emptyData, notNullValue());
-        assertThat(viewModel.selectedCity, notNullValue());
-        assertThat(viewModel.dataReady, notNullValue());
+    @After
+    public void tearDown() {
+        viewModel.removeUpdateListener(updateListener);
     }
 
     @Test
     public void testDataReady() {
-        Observer<Boolean> observer = mock(Observer.class);
-        viewModel.dataReady.observeForever(observer);
         viewModel.init(jsonReader, false);
-        verify(observer).onChanged(true);
-        assertThat(viewModel.cityList, notNullValue());
+        assertThat(updateListener.cityList, notNullValue());
     }
 
     @Test
     public void testInitialListLoading() {
-        ArgumentCaptor<PagedList<City>> captor = forClass(PagedList.class);
-        Observer<PagedList<City>> observer = mock(Observer.class);
         viewModel.init(jsonReader, false);
-        viewModel.cityList.observeForever(observer);
-        verify(observer).onChanged(captor.capture());
-        assertThat(TEST_JSON_SIZE, CoreMatchers.equalTo(captor.getValue().size()));
+        assertThat(updateListener.cityList, notNullValue());
+        assertThat(TEST_JSON_SIZE, equalTo(updateListener.cityList.size()));
     }
 
     @Test
     public void testFiltering() throws InterruptedException {
-        ArgumentCaptor<PagedList<City>> captor = forClass(PagedList.class);
-        Observer<PagedList<City>> listObserver = mock(Observer.class);
-        Observer<Boolean> emptyDataObserver = mock(Observer.class);
         viewModel.init(jsonReader, false);
-        viewModel.cityList.observeForever(listObserver);
-        viewModel.emptyData.observeForever(emptyDataObserver);
 
         // test with full key
         viewModel.filterCities("Novinki");
-        verify(emptyDataObserver, atLeastOnce()).onChanged(false);
-        verify(listObserver, atLeastOnce()).onChanged(captor.capture());
-        assertThat(1, CoreMatchers.equalTo(captor.getValue().size()));
+        assertFalse(updateListener.emptyData);
+        assertThat(1, equalTo(updateListener.cityList.size()));
 
         //   test no matches
         viewModel.filterCities("zzzkyt");
-        verify(emptyDataObserver, atLeastOnce()).onChanged(true);
+        assertTrue(updateListener.emptyData);
 
         // test prefix and trimming
         viewModel.filterCities(" g ");
-        verify(emptyDataObserver, atLeastOnce()).onChanged(false);
-        verify(listObserver, atLeastOnce()).onChanged(captor.capture());
-        assertThat(4, CoreMatchers.equalTo(captor.getValue().size()));
+        assertFalse(updateListener.emptyData);
+        assertThat(4, equalTo(updateListener.cityList.size()));
 
         // test empty query
         viewModel.filterCities("");
-        verify(emptyDataObserver, atLeastOnce()).onChanged(false);
-        verify(listObserver, atLeastOnce()).onChanged(captor.capture());
-        assertThat(TEST_JSON_SIZE, CoreMatchers.equalTo(captor.getValue().size()));
+        assertFalse(updateListener.emptyData);
+        assertThat(TEST_JSON_SIZE, equalTo(updateListener.cityList.size()));
     }
 
     @Test
     public void testOnCityClicked() {
-        ArgumentCaptor<PagedList<City>> captor = forClass(PagedList.class);
-        Observer<PagedList<City>> observer = mock(Observer.class);
         viewModel.init(jsonReader, false);
-        viewModel.cityList.observeForever(observer);
-        verify(observer).onChanged(captor.capture());
-
-        City city = captor.getValue().get(0);
-        Observer<City> cityObserver = mock(Observer.class);
-        viewModel.selectedCity.observeForever(cityObserver);
+        City city = updateListener.cityList.get(0);
         viewModel.onCityClicked(city);
-        verify(cityObserver, atLeastOnce()).onChanged(city);
+        assertEquals(city, updateListener.selectedCity);
     }
 
     @Test
     public void testDataInBackground() throws UnsupportedEncodingException {
-        Observer<Boolean> observer = mock(Observer.class);
-        viewModel.dataReady.observeForever(observer);
+        updateListener.listenForDataReadyChanges();
         viewModel.init(jsonReader, true);
-        verifyNoMoreInteractions(observer);
+        assertEquals(0, updateListener.getDataReadyChangeCount());
     }
 
     @Test
     public void testDataRecreation() throws UnsupportedEncodingException {
         try {
             viewModel = new CityListViewModel();
-            Observer<Boolean> observer = mock(Observer.class);
-            viewModel.dataReady.observeForever(observer);
+            viewModel.addUpdateListener(updateListener);
 
             // test dataReady not observed at first init call (because it's in background thread)
+            updateListener.listenForDataReadyChanges();
             InputStream in = getClass().getClassLoader().getResourceAsStream(TEST_JSON);
             jsonReader = new JsonReader(new InputStreamReader(in, "UTF-8"));
             viewModel.init(jsonReader, true);
-            verifyNoMoreInteractions(observer);
+            assertEquals(0, updateListener.getDataReadyChangeCount());
 
             // test dataReady is observed on second call on the main thread, even though data
             // is loaded on a background thread. This means data is not being reloaded
             // every time init is called, but only the first time
+            updateListener.listenForDataReadyChanges();
             in = getClass().getClassLoader().getResourceAsStream(TEST_JSON);
             jsonReader = new JsonReader(new InputStreamReader(in, "UTF-8"));
             viewModel.init(jsonReader, true);
-            verify(observer).onChanged(any());
+            assertTrue(updateListener.getDataReadyChangeCount() > 0);
         } catch (RuntimeException rte) {
             // may throw exception if data loading is completed before the test is finished
             // this is because Android Looper is not mocked, and executing data loading on

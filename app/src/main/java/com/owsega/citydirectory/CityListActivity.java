@@ -1,7 +1,6 @@
 package com.owsega.citydirectory;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.transition.TransitionManager;
@@ -140,8 +139,8 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
     }
 
     @Override
-    public void onCitySelected(@Nullable City city) {
-        if (city != null && cityMap != null) {
+    public void onCitySelected(City city) {
+        if (cityMap != null) {
             cityMap.animateCamera(
                     CameraUpdateFactory.newLatLng(
                             new LatLng(city.coord.lat, city.coord.lon)));

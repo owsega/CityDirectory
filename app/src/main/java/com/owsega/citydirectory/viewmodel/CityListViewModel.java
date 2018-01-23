@@ -3,7 +3,6 @@ package com.owsega.citydirectory.viewmodel;
 import android.arch.lifecycle.LiveData;
 import android.arch.paging.LivePagedListBuilder;
 import android.arch.paging.PagedList;
-import android.support.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -187,7 +186,9 @@ public class CityListViewModel implements OnCityClickListener {
 
     @Override
     public void onCityClicked(City city) {
-        for (UpdateListener l : updateListeners) l.onCitySelected(city);
+        if (city != null) {
+            for (UpdateListener l : updateListeners) l.onCitySelected(city);
+        }
     }
 
     /**
@@ -197,7 +198,7 @@ public class CityListViewModel implements OnCityClickListener {
     public interface UpdateListener {
         void onEmptyData(boolean emptyData);
 
-        void onCitySelected(@Nullable City city);
+        void onCitySelected(City city);
 
         void onDataReady(boolean dataReady);
 
