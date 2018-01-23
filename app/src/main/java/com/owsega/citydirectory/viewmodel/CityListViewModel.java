@@ -21,7 +21,20 @@ import java.util.concurrent.Executors;
 
 
 /**
- * ViewModel for CityListActivity. Provides data to be shown in the activity
+ * ViewModel for CityListActivity. Provides data to be shown in the activity.
+ *
+ * The cities data is stored in a json assets file, but is accessed with
+ * Gson's {@link JsonReader} here. The data is preprocessed into {@link ConcurrentNavigableMap}
+ * (specifically, the {@link ConcurrentSkipListMap} because we need the data structure to be
+ * <ol>
+ *     <li>Sorted. Since we are showing the cities alphabetically</li>
+ *     <li>Mapped. Since we have to map the actual {@link City}s to a key that
+ *     can be used to search. The key should be case insensitive.</li>
+ *     <li>Concurrent. To allow for responsive UI, heavy data processing like
+ *     data preprocessing and filtering should be done on background threads.</li>
+ *     <li>Fast. Accessing elements of the data structure should be as fast
+ *     as possible.</li>
+ * </ol>
  */
 public class CityListViewModel implements OnCityClickListener {
 
