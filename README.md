@@ -2,7 +2,6 @@
 
 The code is located at https://github.com/owsega/CityDirectory
 
-Updates added since Friday 19/01/2018 may be found in the `updates` branch. These updates include several bug fixes, including performance and memory optimizations, searching with uppercase or mixed characters and unit tests.
 
 Features:
 1. List cities in a RecyclerView
