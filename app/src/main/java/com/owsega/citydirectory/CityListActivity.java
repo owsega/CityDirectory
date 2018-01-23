@@ -1,7 +1,7 @@
 package com.owsega.citydirectory;
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.transition.TransitionManager;
@@ -23,9 +23,11 @@ import com.google.gson.stream.JsonReader;
 import com.owsega.citydirectory.model.City;
 import com.owsega.citydirectory.viewmodel.CityAdapter;
 import com.owsega.citydirectory.viewmodel.CityListViewModel;
+import com.owsega.citydirectory.viewmodel.CityListViewModel.UpdateListener;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.List;
 
 import static com.owsega.citydirectory.viewmodel.CityListViewModel.CITIES_FILE;
 
@@ -37,9 +39,11 @@ import static com.owsega.citydirectory.viewmodel.CityListViewModel.CITIES_FILE;
  * On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class CityListActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class CityListActivity extends AppCompatActivity implements OnMapReadyCallback, UpdateListener {
 
     CityListViewModel viewModel;
+    CityAdapter cityAdapter;
+
     /**
      * When the activity is not in single-pane mode, this view will not be null
      */
@@ -71,11 +75,13 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
         }
 
         setupMap();
-
         setupViewModel();
+    }
 
-        // initListAndSearchView();
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (viewModel != null) viewModel.removeUpdateListener(this);
     }
 
     private void setupMap() {
@@ -90,83 +96,24 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
             InputStream in = getApplicationContext().getAssets().open(CITIES_FILE);
             JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
             viewModel.init(reader, true);
+            viewModel.addUpdateListener(this);
         } catch (Exception e) {
             showError(getString(R.string.error_loading_cities));
             e.printStackTrace();
         }
-        viewModel.dataReady.observe(this, aBoolean -> initListAndSearchView());
     }
 
     public void showError(CharSequence message) {
         Snackbar.make(coordinator, message, Snackbar.LENGTH_LONG);
     }
 
-    private void initListAndSearchView() {
-        RecyclerView recyclerView = findViewById(R.id.city_list);
-        assert recyclerView != null;
-        setupRecyclerView(recyclerView);
-
-        EditText editText = findViewById(R.id.search_view);
-        assert editText != null;
-        setupSearchView(editText);
-    }
-
-    private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
-        final CityAdapter cityAdapter = new CityAdapter(viewModel);
-        viewModel.cityList.observe(this, pagedList -> {
-            showEmptyListMessage(pagedList == null);
-            hideProgressBar();
-            cityAdapter.setList(pagedList);
-        });
-        viewModel.selectedCity.observe(this, city -> {
-            if (city != null) updateUiWithNewCity(city);
-        });
-        viewModel.emptyData.observe(this, isEmpty -> {
-            if (isEmpty != null) showEmptyListMessage(isEmpty);
-        });
-        recyclerView.setAdapter(cityAdapter);
-    }
-
-    private void setupSearchView(EditText editText) {
-        editText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                viewModel.filterCities(s.toString());
-            }
-        });
-    }
-
-    /**
-     * call with true to show message indicating no data on the list, or false to show the list
-     */
-    public void showEmptyListMessage(boolean shouldShow) {
-        listViewWrapper.setDisplayedChild(shouldShow ? 1 : 0);
-    }
-
-    private void hideProgressBar() {
-        TransitionManager.beginDelayedTransition(coordinator);
-        findViewById(R.id.frameLayout).setVisibility(View.VISIBLE);
-        findViewById(R.id.progressBar).setVisibility(View.GONE);
-    }
-
-    private void updateUiWithNewCity(@NonNull City city) {
-        if (cityMap != null) {
-            cityMap.animateCamera(
-                    CameraUpdateFactory.newLatLng(
-                            new LatLng(city.coord.lat, city.coord.lon)));
-
-            if (viewSwitcher != null) {
-                showDetail(true);
-                getSupportActionBar().setTitle(city.toString());
-            }
+    @Override
+    public void onBackPressed() {
+        // if current view is the detail view then show list
+        if (viewSwitcher != null && viewSwitcher.getDisplayedChild() == 1) {
+            showDetail(false);
+        } else {
+            super.onBackPressed();
         }
     }
 
@@ -180,17 +127,69 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
     }
 
     @Override
-    public void onBackPressed() {
-        // if current view is the detail view then show list
-        if (viewSwitcher != null && viewSwitcher.getDisplayedChild() == 1) {
-            showDetail(false);
-        } else {
-            super.onBackPressed();
+    public void onMapReady(GoogleMap googleMap) {
+        cityMap = googleMap;
+    }
+
+    /**
+     * call with true to show message indicating no data on the list, or false to show the list
+     */
+    @Override
+    public void onEmptyData(boolean isEmpty) {
+        listViewWrapper.setDisplayedChild(isEmpty ? 1 : 0);
+    }
+
+    @Override
+    public void onCitySelected(@Nullable City city) {
+        if (city != null && cityMap != null) {
+            cityMap.animateCamera(
+                    CameraUpdateFactory.newLatLng(
+                            new LatLng(city.coord.lat, city.coord.lon)));
+
+            if (viewSwitcher != null) {
+                showDetail(true);
+                getSupportActionBar().setTitle(city.toString());
+            }
         }
     }
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
-        cityMap = googleMap;
+    public void onDataReady(boolean dataReady) {
+        if (dataReady) {
+            RecyclerView recyclerView = findViewById(R.id.city_list);
+            assert recyclerView != null;
+            cityAdapter = new CityAdapter(viewModel);
+            recyclerView.setAdapter(cityAdapter);
+
+            EditText editText = findViewById(R.id.search_view);
+            assert editText != null;
+            editText.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    viewModel.filterCities(s.toString());
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onCityListUpdated(List<City> cities) {
+        CityListActivity.this.onEmptyData(cities == null);
+        CityListActivity.this.hideProgressBar();
+        cityAdapter.setList(cities);
+    }
+
+    private void hideProgressBar() {
+        TransitionManager.beginDelayedTransition(coordinator);
+        findViewById(R.id.frameLayout).setVisibility(View.VISIBLE);
+        findViewById(R.id.progressBar).setVisibility(View.GONE);
     }
 }
