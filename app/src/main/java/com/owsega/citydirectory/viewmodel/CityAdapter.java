@@ -82,7 +82,13 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
         diffResult.dispatchUpdatesTo(this);
     }
 
+    /**
+     * Listener for clicks on {@link City}s in the UI
+     */
     public interface OnCityClickListener {
+        /**
+         * @param city the City object clicked
+         */
         void onCityClicked(City city);
     }
 

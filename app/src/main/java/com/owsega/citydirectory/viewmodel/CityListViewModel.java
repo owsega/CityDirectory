@@ -57,6 +57,12 @@ public class CityListViewModel extends ViewModel implements OnCityClickListener 
         emptyData = new MutableLiveData<>();
     }
 
+    /**
+     * initialize view model. Load data from json into internal structure
+     *
+     * @param jsonReader           a Gson JsonReader reading input json
+     * @param useBackgroundThreads if true, the heavy tasks are done in a background thread (both data initialization and filtering)
+     */
     public void init(final JsonReader jsonReader, boolean useBackgroundThreads) {
         if (dataPrepStarted) {
             dataReady.postValue(dataReady.getValue());
@@ -120,6 +126,10 @@ public class CityListViewModel extends ViewModel implements OnCityClickListener 
         emptyData.postValue(false);
     }
 
+    /**
+     * filter the data with the given prefix
+     * @param text prefix to filter the data set with
+     */
     public void filterCities(String text) {
         text = text.trim();
         if (text.isEmpty()) {
