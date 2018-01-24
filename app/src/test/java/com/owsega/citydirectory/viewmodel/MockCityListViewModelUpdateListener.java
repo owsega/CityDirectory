@@ -45,12 +45,6 @@ public class MockCityListViewModelUpdateListener implements UpdateListener {
     public void onDataReady(boolean dataReady) {
         this.dataReady = dataReady;
         dataReadyChangeCount++;
-        if (dataReady) {
-            this.cityList = new ArrayList<>();
-            for (Entry<String, City> city : viewModel.getData().entrySet()) {
-                this.cityList.add(city.getValue());
-            }
-        } else this.cityList = null;
     }
 
     public int getDataReadyChangeCount() {
