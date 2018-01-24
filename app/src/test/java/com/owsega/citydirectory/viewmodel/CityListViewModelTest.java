@@ -1,14 +1,11 @@
 package com.owsega.citydirectory.viewmodel;
 
 
-import android.arch.core.executor.testing.InstantTaskExecutorRule;
-
 import com.google.gson.stream.JsonReader;
 import com.owsega.citydirectory.model.City;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.InputStream;
@@ -27,17 +24,14 @@ public class CityListViewModelTest {
     private static final String TEST_JSON = "smallcities.json";
     private static final int TEST_JSON_SIZE = 50;
 
-    @Rule
-    public InstantTaskExecutorRule instantExecutorRule = new InstantTaskExecutorRule();
-
     private CityListViewModel viewModel;
     private JsonReader jsonReader;
     private MockCityListViewModelUpdateListener updateListener;
 
     @Before
     public void setup() {
-        updateListener = new MockCityListViewModelUpdateListener();
         viewModel = new CityListViewModel();
+        updateListener = new MockCityListViewModelUpdateListener(viewModel);
 
         try {
             InputStream in = getClass().getClassLoader().getResourceAsStream(TEST_JSON);

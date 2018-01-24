@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentNavigableMap;
 
 public class CityAdapterHelper {
-
+    //Executors.newFixedThreadPool(2);    io thread
+//return create(mInitialLoadKey, mConfig, mBoundaryCallback, mDataSourceFactory, ArchTaskExecutor.getMainThreadExecutor(), mBackgroundThreadExecutor);
     private static final int PAGE_SIZE = 100;
 
     private CityListViewModel viewModel;
@@ -84,4 +85,3 @@ public class CityAdapterHelper {
         loadInitial(PAGE_SIZE);
     }
 }
-    

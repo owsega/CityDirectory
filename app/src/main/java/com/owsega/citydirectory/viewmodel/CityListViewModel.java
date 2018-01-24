@@ -60,7 +60,6 @@ public class CityListViewModel implements OnCityClickListener {
 
     private Executor executor;
     private ConcurrentNavigableMap<String, City> fullData;
-    private CityDataSourceFactory dataSourceFactory;
 
     public CityListViewModel() {
         updateListeners = new ArrayList<>();
@@ -114,14 +113,12 @@ public class CityListViewModel implements OnCityClickListener {
 
     private void initDataStructures(ConcurrentNavigableMap<String, City> cities) {
         fullData = cities;
-        dataSourceFactory = new CityDataSourceFactory(cities);
         setList(fullData);
         dataReady = true;
         for (UpdateListener l : updateListeners) l.onDataReady(dataReady);
     }
 
     private void setList(ConcurrentNavigableMap<String, City> cities) {
-        dataSourceFactory.invalidateData(cities);
         for (UpdateListener l : updateListeners) l.onEmptyData(false);
     }
 

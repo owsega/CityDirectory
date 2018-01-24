@@ -5,18 +5,25 @@ import android.support.annotation.Nullable;
 import com.owsega.citydirectory.model.City;
 import com.owsega.citydirectory.viewmodel.CityListViewModel.UpdateListener;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 /**
  * Mock class for mocking updates from {@link CityListViewModel} during test
  */
 public class MockCityListViewModelUpdateListener implements UpdateListener {
 
+    CityListViewModel viewModel;
     boolean emptyData;
     boolean dataReady;
     City selectedCity;
     List<City> cityList;
     private int dataReadyChangeCount;
+
+    MockCityListViewModelUpdateListener(CityListViewModel viewModel) {
+        this.viewModel = viewModel;
+    }
 
     @Override
     public void onEmptyData(boolean emptyData) {
@@ -32,11 +39,12 @@ public class MockCityListViewModelUpdateListener implements UpdateListener {
     public void onDataReady(boolean dataReady) {
         this.dataReady = dataReady;
         dataReadyChangeCount++;
-    }
-
-    @Override
-    public void onCityListUpdated(List<City> cities) {
-        this.cityList = cities;
+        if (dataReady) {
+            this.cityList = new ArrayList<>();
+            for (Entry<String, City> city : viewModel.getData().entrySet()) {
+                this.cityList.add(city.getValue());
+            }
+        } else this.cityList = null;
     }
 
     public int getDataReadyChangeCount() {
