@@ -1,11 +1,15 @@
 package com.owsega.citydirectory.viewmodel;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import com.owsega.citydirectory.model.City;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.Executor;
 
 public class CityAdapterHelper {
     private static final int PAGE_SIZE = 100;
@@ -37,9 +41,11 @@ public class CityAdapterHelper {
         updateAdapter(output);
     }
 
-    private void updateAdapter(List<City> output) {
-        // todo run on main thread
-        if (adapter != null) adapter.setList(output);
+    private void updateAdapter(final List<City> output) {
+        System.out.println("updateAdapter with data of size " + output.size());
+        new Handler(Looper.getMainLooper()).post(() -> {
+            if (adapter != null) adapter.setList(output);
+        });
     }
 
     private void loadBefore(int requestedLoadSize, String key) {
@@ -63,6 +69,15 @@ public class CityAdapterHelper {
     }
 
     private void loadInitial(int requestedLoadSize) {
+        Executor executor = viewModel.getExecutor();
+        System.out.println("Load initial beginning " + requestedLoadSize + " in background=" + (executor == null));
+        if (executor != null) executor.execute(() -> loadInitialData(requestedLoadSize));
+        else loadInitialData(requestedLoadSize);
+    }
+
+    private void loadInitialData(int requestedLoadSize) {
+        //todo disregarding param requestedLoadSize
+        requestedLoadSize = count > 0 ? count : requestedLoadSize;
         ConcurrentNavigableMap<String, City> data = viewModel.getData();
         List<City> output = new ArrayList<>();
 

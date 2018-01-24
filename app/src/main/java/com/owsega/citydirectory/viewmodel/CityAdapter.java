@@ -78,9 +78,17 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
      * @param newList The new list to be displayed.
      */
     public void setList(List<City> newList) {
-        DiffResult diffResult = DiffUtil.calculateDiff(new CityDiffCallback(currentList, newList));
-        this.currentList = newList;
-        diffResult.dispatchUpdatesTo(this);
+        System.out.println("CityAdapter.setList");
+        // if list difference is > 100, just use the old style, to save time
+        // the drawback is that it resets the current position
+        if (currentList == null || Math.abs(newList.size() - currentList.size()) > 100) {
+            this.currentList = newList;
+            notifyDataSetChanged();
+        } else {
+            DiffResult diffResult = DiffUtil.calculateDiff(new CityDiffCallback(currentList, newList));
+            this.currentList = newList;
+            diffResult.dispatchUpdatesTo(this);
+        }
     }
 
     /**

@@ -1,5 +1,8 @@
 package com.owsega.citydirectory.viewmodel;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
@@ -23,7 +26,9 @@ import java.util.concurrent.Executors;
  * Gson's {@link JsonReader} here. The data is preprocessed into {@link ConcurrentNavigableMap}
  * (specifically, the {@link ConcurrentSkipListMap} because we need the data structure to be
  * <ol>
- * <li>Sorted. Since we are showing the cities alphabetically</li>
+ * <li>Sorted. Since we are showing the cities alphabetically, we need a sorted data
+ * structure. The sorting also helps in doing fast searches: we can easily use the
+ * {@link ConcurrentNavigableMap#floorEntry(Object)} and similar functions.</li>
  * <li>Mapped. Since we have to map the actual {@link City}s to a key that
  * can be used to search. The key should be case insensitive.</li>
  * <li>Concurrent. To allow for responsive UI, heavy data processing like
@@ -31,6 +36,7 @@ import java.util.concurrent.Executors;
  * <li>Fast. Accessing elements of the data structure should be as fast
  * as possible.</li>
  * </ol>
+ * The ViewModel class is standalone, and lives in the application context. We
  */
 public class CityListViewModel implements OnCityClickListener {
 
@@ -47,7 +53,7 @@ public class CityListViewModel implements OnCityClickListener {
     /**
      * monitors if the data preparation has started.
      * This helps ensure we don't start the data prep process
-     * (in {@link #getAllCities(JsonReader)}) all over again
+     * (in {@link #getAllCities(JsonReader, boolean)}) all over again
      * in a new background thread if {@link #init(JsonReader, boolean)}
      * is called again before the initial data prep is completed.
      */
@@ -85,14 +91,14 @@ public class CityListViewModel implements OnCityClickListener {
         }
 
         if (useBackgroundThreads) {
-            this.executor = Executors.newFixedThreadPool(5);
-            Executors.newSingleThreadExecutor().execute(() -> getAllCities(jsonReader));
+            executor = Executors.newFixedThreadPool(5);
+            executor.execute(() -> getAllCities(jsonReader, false));
         } else {
-            getAllCities(jsonReader);
+            getAllCities(jsonReader, true);
         }
     }
 
-    private void getAllCities(JsonReader reader) {
+    private void getAllCities(JsonReader reader, boolean onMainThread) {
         dataPrepStarted = true;
         System.out.println(TAG + " starting getAllcities");
         long time = System.currentTimeMillis();
@@ -101,11 +107,12 @@ public class CityListViewModel implements OnCityClickListener {
         List<City> cities = new Gson().fromJson(reader, type);
         time = System.currentTimeMillis() - time;
         System.out.println(TAG + " time to parse json " + time);
-        ConcurrentNavigableMap<String, City> citiesMap = new ConcurrentSkipListMap<>();
+        final ConcurrentNavigableMap<String, City> citiesMap = new ConcurrentSkipListMap<>();
         for (City city : cities) {
-            citiesMap.put(city.getKey(), city); //todo could use multiple threads to do this
+            citiesMap.put(city.getKey(), city); // todo could use multiple threads to do this
         }
-        initDataStructures(citiesMap);
+        if (onMainThread) initDataStructures(citiesMap);
+        else new Handler(Looper.getMainLooper()).post(() -> initDataStructures(citiesMap));
         try {
             reader.close();
         } catch (IOException ignored) {
@@ -187,8 +194,13 @@ public class CityListViewModel implements OnCityClickListener {
         return filteredData;
     }
 
+    public Executor getExecutor() {
+        return executor;
+    }
+
     /**
      * Listener for updates from the ViewModel.
+     * <p>
      * This is to replace the LiveData (from android.arch) usage
      */
     public interface UpdateListener {
