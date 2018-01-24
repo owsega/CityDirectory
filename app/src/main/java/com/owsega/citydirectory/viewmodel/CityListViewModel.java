@@ -120,10 +120,11 @@ public class CityListViewModel implements OnCityClickListener {
     }
 
     private void initDataStructures(ConcurrentNavigableMap<String, City> cities) {
-        fullData = cities;
-        setList(fullData);
         dataReady = true;
         for (UpdateListener l : updateListeners) l.onDataReady(dataReady);
+
+        fullData = cities;
+        setList(fullData);
     }
 
     private void setList(ConcurrentNavigableMap<String, City> cities) {

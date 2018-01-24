@@ -63,16 +63,15 @@ public class CityAdapterHelper {
         updateAdapter(output);
     }
 
-    public void notifyDataReady() {
+    public void reloadData() {
         count = viewModel.getData().size();
-        if (count > 0) loadInitial(PAGE_SIZE);
-    }
-
-    private void loadInitial(int requestedLoadSize) {
-        Executor executor = viewModel.getExecutor();
-        System.out.println("Load initial beginning " + requestedLoadSize + " in background=" + (executor == null));
-        if (executor != null) executor.execute(() -> loadInitialData(requestedLoadSize));
-        else loadInitialData(requestedLoadSize);
+        if (count > 0) {
+            int pageSize = PAGE_SIZE;
+            Executor executor = viewModel.getExecutor();
+            System.out.println("Load initial beginning " + pageSize + " in background=" + (executor == null));
+            if (executor != null) executor.execute(() -> loadInitialData(pageSize));
+            else loadInitialData(pageSize);
+        }
     }
 
     private void loadInitialData(int requestedLoadSize) {
@@ -92,6 +91,5 @@ public class CityAdapterHelper {
 
     void setAdapter(CityAdapter adapter) {
         this.adapter = adapter;
-        loadInitial(PAGE_SIZE);
     }
 }

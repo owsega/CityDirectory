@@ -140,7 +140,7 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
     @Override
     public void onEmptyData(boolean isEmpty) {
         listViewWrapper.setDisplayedChild(isEmpty ? 1 : 0);
-        if (!isEmpty) cityAdapterHelper.notifyDataReady();
+        if (!isEmpty) cityAdapterHelper.reloadData();
     }
 
     @Override
@@ -183,7 +183,6 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
             });
 
             hideProgressBar();
-            cityAdapterHelper.notifyDataReady();
         }
     }
 
