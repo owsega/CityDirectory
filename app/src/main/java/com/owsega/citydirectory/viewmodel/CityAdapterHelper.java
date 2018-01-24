@@ -11,6 +11,12 @@ import java.util.List;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.Executor;
 
+
+/**
+ * Helper class to interface between the {@link CityAdapter} and the {@link CityListViewModel}
+ * to resolve their differences. For instance, the viewModel lives in the appContext, the adapter
+ * exist per activity. The adapter uses a list, the viewModel uses a Map.
+ */
 public class CityAdapterHelper {
     private static final int PAGE_SIZE = 100;
 

@@ -16,7 +16,7 @@ import com.owsega.citydirectory.model.CityDiffCallback;
 import java.util.List;
 
 /**
- * Adapter a list of for City objects
+ * A {@link RecyclerView.Adapter} for a list of City objects
  */
 public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
 
