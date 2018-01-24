@@ -40,6 +40,7 @@ import static com.owsega.citydirectory.viewmodel.CityListViewModel.CITIES_FILE;
  */
 public class CityListActivity extends AppCompatActivity implements OnMapReadyCallback, UpdateListener {
 
+    private static final String SHOWN_CITY = "currentCity";
     CityListViewModel viewModel;
     CityAdapterHelper cityAdapterHelper;
 
@@ -53,6 +54,10 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
     private ViewSwitcher listViewWrapper;
     private CoordinatorLayout coordinator;
     private GoogleMap cityMap;
+    /**
+     * currently shown city (null, if the current view is not a Map)
+     */
+    private City shownCity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +78,10 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
             viewSwitcher = findViewById(R.id.view_switcher);
         }
 
+        if (savedInstanceState != null) {
+            shownCity = (City) savedInstanceState.getSerializable(SHOWN_CITY);
+        }
+
         setupMap();
         setupViewModel();
     }
@@ -83,6 +92,15 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
         if (viewModel != null) viewModel.removeUpdateListener(this);
         cityAdapterHelper = null;
         viewModel = null;
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        if (viewSwitcher.getDisplayedChild() == 1 && shownCity != null) {
+            outState.putSerializable(SHOWN_CITY, shownCity);
+        }
     }
 
     private void setupMap() {
@@ -126,12 +144,18 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
     public void showDetail(boolean shouldShow) {
         viewSwitcher.setDisplayedChild(shouldShow ? 1 : 0);
 
-        if (!shouldShow) getSupportActionBar().setTitle(R.string.app_name);
+        if (!shouldShow) {
+            getSupportActionBar().setTitle(R.string.app_name);
+            shownCity = null;
+        }
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         cityMap = googleMap;
+        if (shownCity != null) { // load savedInstanceState's city
+            onCitySelected(shownCity);
+        }
     }
 
     /**
@@ -151,6 +175,7 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
                             new LatLng(city.coord.lat, city.coord.lon)));
 
             if (viewSwitcher != null) {
+                shownCity = city;
                 showDetail(true);
                 getSupportActionBar().setTitle(city.toString());
             }

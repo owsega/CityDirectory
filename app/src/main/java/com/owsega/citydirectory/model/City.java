@@ -2,10 +2,12 @@ package com.owsega.citydirectory.model;
 
 import android.support.annotation.NonNull;
 
+import java.io.Serializable;
+
 /**
  * A city object
  */
-public class City implements Comparable<City> {
+public class City implements Comparable<City>, Serializable {
 
     public long _id;
     public String country;
@@ -42,8 +44,13 @@ public class City implements Comparable<City> {
         return string.toLowerCase();
     }
 
-    public class Coord {
+    public static class Coord {
         public float lon;
         public float lat;
+
+        public Coord(float lat, float lon) {
+            this.lon = lon;
+            this.lat = lat;
+        }
     }
 }
