@@ -1,6 +1,5 @@
 package com.owsega.citydirectory.viewmodel;
 
-import android.support.annotation.Nullable;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.util.DiffUtil.DiffResult;
 import android.support.v7.widget.RecyclerView;
@@ -52,14 +51,19 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
             holder.itemView.setTag(city);
             holder.itemView.setOnClickListener(onClickListener);
         }
+        helper.loadAround(position);
     }
 
-    @Nullable
+    /**
+     * @param position position to return item for, between 0 and listSize - 1. Use -1 to return the last item in the list.
+     * @return the City object tied to the given position in the current list (page)
+     */
     City getItem(int position) {
         if (currentList == null) {
-            throw new IndexOutOfBoundsException("Item count is zero, getItem() call is invalid");
+            throw new IndexOutOfBoundsException("Null list, getItem() call is invalid");
+        } else if (position == -1) {  // helper for getting the last item
+            return currentList.get(currentList.size() - 1);
         } else {
-            helper.loadAround(position);
             return currentList.get(position);
         }
     }
@@ -67,6 +71,10 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
     @Override
     public int getItemCount() {
         return currentList == null ? 0 : currentList.size();
+    }
+
+    public List<City> getList() {
+        return currentList;
     }
 
     /**
@@ -78,7 +86,6 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
      * @param newList The new list to be displayed.
      */
     public void setList(List<City> newList) {
-        System.out.println("CityAdapter.setList");
         // if list difference is > 100, just use the old style, to save time
         // the drawback is that it resets the current position
         if (currentList == null || Math.abs(newList.size() - currentList.size()) > 100) {
