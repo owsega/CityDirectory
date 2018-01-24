@@ -1,7 +1,5 @@
 package com.owsega.citydirectory.viewmodel;
 
-import android.util.Log;
-
 import com.owsega.citydirectory.model.City;
 
 import java.util.ArrayList;
@@ -10,8 +8,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentNavigableMap;
 
 public class CityAdapterHelper {
-    //Executors.newFixedThreadPool(2);    io thread
-//return create(mInitialLoadKey, mConfig, mBoundaryCallback, mDataSourceFactory, ArchTaskExecutor.getMainThreadExecutor(), mBackgroundThreadExecutor);
     private static final int PAGE_SIZE = 100;
 
     private CityListViewModel viewModel;
@@ -67,7 +63,6 @@ public class CityAdapterHelper {
     }
 
     private void loadInitial(int requestedLoadSize) {
-        Log.e("seyi", "loading initial data");
         ConcurrentNavigableMap<String, City> data = viewModel.getData();
         List<City> output = new ArrayList<>();
 

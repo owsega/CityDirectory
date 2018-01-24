@@ -103,6 +103,7 @@ public class CityListViewModelTest {
     public void testDataRecreation() throws UnsupportedEncodingException {
         try {
             viewModel = new CityListViewModel();
+            updateListener = new MockCityListViewModelUpdateListener(viewModel);
             viewModel.addUpdateListener(updateListener);
 
             // test dataReady not observed at first init call (because it's in background thread)

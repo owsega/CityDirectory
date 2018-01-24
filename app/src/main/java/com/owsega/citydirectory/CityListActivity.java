@@ -9,7 +9,6 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ViewSwitcher;
@@ -140,13 +139,12 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
      */
     @Override
     public void onEmptyData(boolean isEmpty) {
-        Log.e("seyi", "onEmptyData " + isEmpty);
         listViewWrapper.setDisplayedChild(isEmpty ? 1 : 0);
+        if (!isEmpty) cityAdapterHelper.notifyDataReady();
     }
 
     @Override
     public void onCitySelected(City city) {
-        Log.e("seyi", "onCitySelected " + city);
         if (cityMap != null) {
             cityMap.animateCamera(
                     CameraUpdateFactory.newLatLng(
@@ -161,7 +159,6 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
 
     @Override
     public void onDataReady(boolean dataReady) {
-        Log.e("seyi", "dataReady " + dataReady);
         if (dataReady) {
             RecyclerView recyclerView = findViewById(R.id.city_list);
             assert recyclerView != null;

@@ -28,6 +28,12 @@ public class MockCityListViewModelUpdateListener implements UpdateListener {
     @Override
     public void onEmptyData(boolean emptyData) {
         this.emptyData = emptyData;
+        if (!emptyData) {
+            this.cityList = new ArrayList<>();
+            for (Entry<String, City> city : viewModel.getData().entrySet()) {
+                this.cityList.add(city.getValue());
+            }
+        } else this.cityList = null;
     }
 
     @Override
