@@ -11,8 +11,9 @@ import com.owsega.citydirectory.viewmodel.CityAdapter.OnCityClickListener;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.Executor;
@@ -48,7 +49,7 @@ public class CityListViewModel implements OnCityClickListener {
      * holds listeners to updates from the ViewModel.
      * Should be only one {@link com.owsega.citydirectory.CityListActivity} at a time.
      */
-    private List<UpdateListener> updateListeners;
+    private Set<UpdateListener> updateListeners;
 
     /**
      * monitors if the data preparation has started.
@@ -69,7 +70,7 @@ public class CityListViewModel implements OnCityClickListener {
     private ConcurrentNavigableMap<String, City> filteredData;
 
     public CityListViewModel() {
-        updateListeners = new ArrayList<>();
+        updateListeners = new HashSet<>();
         dataPrepStarted = false;
         dataReady = false;
     }
@@ -83,6 +84,8 @@ public class CityListViewModel implements OnCityClickListener {
     public void init(final JsonReader jsonReader, boolean useBackgroundThreads) {
         if (dataPrepStarted) {
             for (UpdateListener l : updateListeners) l.onDataReady(dataReady);
+            if (dataReady && filteredData != null) setList(filteredData);
+
             try {
                 jsonReader.close();
             } catch (IOException ignored) {
@@ -94,8 +97,14 @@ public class CityListViewModel implements OnCityClickListener {
             executor = Executors.newFixedThreadPool(5);
             executor.execute(() -> getAllCities(jsonReader, false));
         } else {
+            executor = null;
             getAllCities(jsonReader, true);
         }
+    }
+
+    private void setList(ConcurrentNavigableMap<String, City> cities) {
+        filteredData = cities;
+        for (UpdateListener l : updateListeners) l.onEmptyData(false);
     }
 
     private void getAllCities(JsonReader reader, boolean onMainThread) {
@@ -107,10 +116,13 @@ public class CityListViewModel implements OnCityClickListener {
         List<City> cities = new Gson().fromJson(reader, type);
         time = System.currentTimeMillis() - time;
         System.out.println(TAG + " time to parse json " + time);
+        time = System.currentTimeMillis();
         final ConcurrentNavigableMap<String, City> citiesMap = new ConcurrentSkipListMap<>();
         for (City city : cities) {
-            citiesMap.put(city.getKey(), city); // todo could use multiple threads to do this
+            citiesMap.put(city.getKey(), city); // could be split to multiple threads
         }
+        time = System.currentTimeMillis() - time;
+        System.out.println(TAG + " time to create map " + time);
         if (onMainThread) initDataStructures(citiesMap);
         else new Handler(Looper.getMainLooper()).post(() -> initDataStructures(citiesMap));
         try {
@@ -125,11 +137,6 @@ public class CityListViewModel implements OnCityClickListener {
 
         fullData = cities;
         setList(fullData);
-    }
-
-    private void setList(ConcurrentNavigableMap<String, City> cities) {
-        filteredData = cities;
-        for (UpdateListener l : updateListeners) l.onEmptyData(false);
     }
 
     public void addUpdateListener(UpdateListener updateListener) {

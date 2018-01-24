@@ -41,7 +41,6 @@ import static com.owsega.citydirectory.viewmodel.CityListViewModel.CITIES_FILE;
 public class CityListActivity extends AppCompatActivity implements OnMapReadyCallback, UpdateListener {
 
     CityListViewModel viewModel;
-    CityAdapter cityAdapter;
     CityAdapterHelper cityAdapterHelper;
 
     /**
@@ -76,7 +75,6 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
 
         setupMap();
         setupViewModel();
-        cityAdapterHelper = new CityAdapterHelper(viewModel);
     }
 
     @Override
@@ -84,7 +82,7 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
         super.onDestroy();
         if (viewModel != null) viewModel.removeUpdateListener(this);
         cityAdapterHelper = null;
-        cityAdapter = null;
+        viewModel = null;
     }
 
     private void setupMap() {
@@ -95,11 +93,13 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
 
     private void setupViewModel() {
         viewModel = ((CityDirectory) getApplication()).viewModel;
+        viewModel.addUpdateListener(this);
+        cityAdapterHelper = new CityAdapterHelper(viewModel);
+
         try {
             InputStream in = getApplicationContext().getAssets().open(CITIES_FILE);
             JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
             viewModel.init(reader, true);
-            viewModel.addUpdateListener(this);
         } catch (Exception e) {
             showError(getString(R.string.error_loading_cities));
             e.printStackTrace();
@@ -161,12 +161,10 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
     public void onDataReady(boolean dataReady) {
         if (dataReady) {
             RecyclerView recyclerView = findViewById(R.id.city_list);
-            assert recyclerView != null;
-            cityAdapter = new CityAdapter(viewModel, cityAdapterHelper);
+            CityAdapter cityAdapter = new CityAdapter(viewModel, cityAdapterHelper);
             recyclerView.setAdapter(cityAdapter);
 
             EditText editText = findViewById(R.id.search_view);
-            assert editText != null;
             editText.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {
