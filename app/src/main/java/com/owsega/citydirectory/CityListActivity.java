@@ -1,6 +1,7 @@
 package com.owsega.citydirectory;
 
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.transition.TransitionManager;
@@ -41,6 +42,7 @@ import static com.owsega.citydirectory.viewmodel.CityListViewModel.CITIES_FILE;
 public class CityListActivity extends AppCompatActivity implements OnMapReadyCallback, UpdateListener {
 
     private static final String SHOWN_CITY = "currentCity";
+    private static final String LIST_STATE = "listState";
     CityListViewModel viewModel;
     CityAdapterHelper cityAdapterHelper;
 
@@ -58,6 +60,7 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
      * currently shown city (null, if the current view is not a Map)
      */
     private City shownCity;
+    private Parcelable mListState;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,7 +104,13 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
         if (viewSwitcher.getDisplayedChild() == 1 && shownCity != null) {
             outState.putSerializable(SHOWN_CITY, shownCity);
         }
+
+        // Save list state
+        RecyclerView recyclerView = findViewById(R.id.city_list);
+        mListState = recyclerView.getLayoutManager().onSaveInstanceState();
+        outState.putParcelable(LIST_STATE, mListState);
     }
+
 
     private void setupMap() {
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -129,12 +138,30 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
     }
 
     @Override
+    protected void onRestoreInstanceState(Bundle state) {
+        super.onRestoreInstanceState(state);
+
+        RecyclerView recyclerView = findViewById(R.id.city_list);
+        mListState = state.getParcelable(LIST_STATE);
+    }
+
+    @Override
     public void onBackPressed() {
         // if current view is the detail view then show list
         if (viewSwitcher != null && viewSwitcher.getDisplayedChild() == 1) {
             showDetail(false);
         } else {
             super.onBackPressed();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (mListState != null) {
+            RecyclerView recyclerView = findViewById(R.id.city_list);
+            recyclerView.getLayoutManager().onRestoreInstanceState(mListState);
         }
     }
 
