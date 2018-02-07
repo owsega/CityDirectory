@@ -88,7 +88,7 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
     public void setList(List<City> newList) {
         // if list difference is > 100, just use the old style, to save time
         // the drawback is that it resets the current position
-        if (currentList == null || Math.abs(newList.size() - currentList.size()) > 100) {
+        if (currentList == null || Math.abs(newList.size() - currentList.size()) > 200) {
             this.currentList = newList;
             notifyDataSetChanged();
         } else {
