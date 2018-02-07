@@ -119,17 +119,18 @@ public class CityAdapterHelper {
      * notifies this helper to load the current (possibly filtered)
      * data from the viewModel into the adapter.
      */
-    public void reloadData() {
+    public void reloadData(City firstCity) {
+        final String key = firstCity != null ? firstCity.getKey() : viewModel.getData().firstKey();
         Executor executor = viewModel.getExecutor();
-        if (executor != null) executor.execute(this::loadInitialData);
-        else loadInitialData();
+        if (executor != null) executor.execute(() -> loadInitialData(key));
+        else loadInitialData(key);
     }
 
-    private void loadInitialData() {
+    private void loadInitialData(String startKey) {
         ConcurrentNavigableMap<String, City> data = viewModel.getData();
         List<City> output = new ArrayList<>();
 
-        String current = data.firstKey();
+        String current = startKey;
         for (int i = 0; i < MAX_LIST_SIZE; i++) {
             if (current == null) break;
             output.add(data.get(current));

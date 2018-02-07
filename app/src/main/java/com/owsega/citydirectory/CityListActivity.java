@@ -1,12 +1,13 @@
 package com.owsega.citydirectory;
 
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.transition.TransitionManager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.RecyclerView.LayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -41,8 +42,9 @@ import static com.owsega.citydirectory.viewmodel.CityListViewModel.CITIES_FILE;
  */
 public class CityListActivity extends AppCompatActivity implements OnMapReadyCallback, UpdateListener {
 
-    private static final String SHOWN_CITY = "currentCity";
-    private static final String LIST_STATE = "listState";
+    private static final String SHOWN_CITY = "shownCity";
+    private static final String FIRST_CITY = "firstCity";
+
     CityListViewModel viewModel;
     CityAdapterHelper cityAdapterHelper;
 
@@ -54,13 +56,17 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
      * toggles between the list view and a text view (for empty lists scenario)
      */
     private ViewSwitcher listViewWrapper;
+    private RecyclerView cityRecyclerView;
     private CoordinatorLayout coordinator;
     private GoogleMap cityMap;
     /**
      * currently shown city (null, if the current view is not a Map)
      */
     private City shownCity;
-    private Parcelable mListState;
+    /**
+     * savedInstanceState City indicating the first City on the list
+     */
+    private City firstCity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +79,7 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
 
         coordinator = findViewById(R.id.coordinator);
         listViewWrapper = findViewById(R.id.listViewWrapper);
+        cityRecyclerView = findViewById(R.id.city_list);
 
         if (findViewById(R.id.view_switcher) != null) {
             // The view will be present only in the single-pane mode.
@@ -83,6 +90,7 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
 
         if (savedInstanceState != null) {
             shownCity = (City) savedInstanceState.getSerializable(SHOWN_CITY);
+            firstCity = (City) savedInstanceState.getSerializable(FIRST_CITY);
         }
 
         setupMap();
@@ -101,14 +109,22 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
+        // if showing a map, save shown city,
         if (viewSwitcher.getDisplayedChild() == 1 && shownCity != null) {
             outState.putSerializable(SHOWN_CITY, shownCity);
         }
-
-        // Save list state
-        RecyclerView recyclerView = findViewById(R.id.city_list);
-        mListState = recyclerView.getLayoutManager().onSaveInstanceState();
-        outState.putParcelable(LIST_STATE, mListState);
+        // if showing a list, save first city on list
+        RecyclerView.Adapter adapter = cityRecyclerView.getAdapter();
+        LayoutManager layoutManager = cityRecyclerView.getLayoutManager();
+        if (adapter instanceof CityAdapter && layoutManager instanceof LinearLayoutManager) {
+            CityAdapter cityAdapter = (CityAdapter) adapter;
+            LinearLayoutManager llm = (LinearLayoutManager) layoutManager;
+            int pos = llm.findFirstVisibleItemPosition();
+            if (pos != RecyclerView.NO_POSITION) {
+                City city = cityAdapter.getItem(pos);
+                if (city != null) outState.putSerializable(FIRST_CITY, city);
+            }
+        }
     }
 
 
@@ -138,30 +154,12 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
     }
 
     @Override
-    protected void onRestoreInstanceState(Bundle state) {
-        super.onRestoreInstanceState(state);
-
-        RecyclerView recyclerView = findViewById(R.id.city_list);
-        mListState = state.getParcelable(LIST_STATE);
-    }
-
-    @Override
     public void onBackPressed() {
         // if current view is the detail view then show list
         if (viewSwitcher != null && viewSwitcher.getDisplayedChild() == 1) {
             showDetail(false);
         } else {
             super.onBackPressed();
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        if (mListState != null) {
-            RecyclerView recyclerView = findViewById(R.id.city_list);
-            recyclerView.getLayoutManager().onRestoreInstanceState(mListState);
         }
     }
 
@@ -186,12 +184,13 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
     }
 
     /**
-     * call with true to show message indicating no data on the list, or false to show the list
+     * notify the UI whether there is data (or not) to show on the list.
      */
     @Override
     public void onEmptyData(boolean isEmpty) {
         listViewWrapper.setDisplayedChild(isEmpty ? 1 : 0);
-        if (!isEmpty) cityAdapterHelper.reloadData();
+        if (!isEmpty) cityAdapterHelper.reloadData(firstCity);
+        firstCity = null; // clear savedInstanceState first city for next use
     }
 
     @Override
@@ -212,9 +211,8 @@ public class CityListActivity extends AppCompatActivity implements OnMapReadyCal
     @Override
     public void onDataReady(boolean dataReady) {
         if (dataReady) {
-            RecyclerView recyclerView = findViewById(R.id.city_list);
             CityAdapter cityAdapter = new CityAdapter(viewModel, cityAdapterHelper);
-            recyclerView.setAdapter(cityAdapter);
+            cityRecyclerView.setAdapter(cityAdapter);
 
             EditText editText = findViewById(R.id.search_view);
             editText.addTextChangedListener(new TextWatcher() {

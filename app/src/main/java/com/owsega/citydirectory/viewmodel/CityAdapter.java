@@ -58,7 +58,7 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
      * @param position position to return item for, between 0 and listSize - 1. Use -1 to return the last item in the list.
      * @return the City object tied to the given position in the current list (page)
      */
-    City getItem(int position) {
+    public City getItem(int position) {
         if (currentList == null) {
             throw new IndexOutOfBoundsException("Null list, getItem() call is invalid");
         } else if (position == -1) {  // helper for getting the last item
