@@ -73,7 +73,7 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
         return currentList == null ? 0 : currentList.size();
     }
 
-    public List<City> getList() {
+    List<City> getList() {
         return currentList;
     }
 
@@ -85,10 +85,10 @@ public class CityAdapter extends RecyclerView.Adapter<CityAdapter.ViewHolder> {
      *
      * @param newList The new list to be displayed.
      */
-    public void setList(List<City> newList) {
-        // if list difference is > 100, just use the old style, to save time
+    void setList(List<City> newList) {
+        // if list difference is > 300, just use the old style, to save time
         // the drawback is that it resets the current position
-        if (currentList == null || Math.abs(newList.size() - currentList.size()) > 200) {
+        if (currentList == null || Math.abs(newList.size() - currentList.size()) > 300) {
             this.currentList = newList;
             notifyDataSetChanged();
         } else {
